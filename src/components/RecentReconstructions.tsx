@@ -9,11 +9,11 @@ export function RecentReconstructions({ scenes }: RecentReconstructionsProps) {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <span style={styles.title}>Recent Reconstructions</span>
+        <span style={styles.title}>Reconstructions</span>
         <span style={styles.badge}>Phase 2</span>
       </div>
       {scenes.length === 0 ? (
-        <div style={styles.empty}>No reconstructions yet</div>
+        <div style={styles.empty}>No results yet</div>
       ) : (
         <div style={styles.filmstrip}>
           {scenes.map((s, i) => (
@@ -23,8 +23,7 @@ export function RecentReconstructions({ scenes }: RecentReconstructionsProps) {
               </div>
               <div style={styles.cellLabel}>{s.scene_id}</div>
               <div style={styles.cellMeta}>
-                CD: {s.metrics.chamfer_distance.toFixed(4)}<br />
-                IoU: {s.metrics.iou.toFixed(3)}
+                CD {s.metrics.chamfer_distance.toFixed(3)} · IoU {s.metrics.iou.toFixed(2)}
               </div>
             </div>
           ))}
@@ -36,10 +35,9 @@ export function RecentReconstructions({ scenes }: RecentReconstructionsProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
-    padding: "14px 16px",
+    background: "#2f2f2f",
+    borderRadius: 10,
+    padding: "16px 16px 12px",
     flex: 1,
     minWidth: 0,
   },
@@ -51,26 +49,26 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontSize: 13,
-    fontWeight: 600,
-    color: "#e2e8f0",
+    fontWeight: 500,
+    color: "#ececec",
   },
   badge: {
     fontSize: 10,
-    padding: "2px 6px",
-    background: "#1d4ed822",
-    border: "1px solid #1d4ed8",
+    padding: "2px 7px",
+    background: "#3f3f3f",
     borderRadius: 4,
-    color: "#60a5fa",
+    color: "#565869",
+    fontWeight: 500,
   },
   empty: {
-    height: 120,
+    height: 100,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#475569",
+    color: "#565869",
     fontSize: 13,
-    border: "1px dashed #334155",
-    borderRadius: 6,
+    border: "1px dashed #3f3f3f",
+    borderRadius: 8,
   },
   filmstrip: {
     display: "flex",
@@ -80,20 +78,19 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cell: {
     flexShrink: 0,
-    width: 100,
+    width: 96,
   },
   placeholder: {
-    width: 100,
-    height: 100,
-    background: "#0f172a",
-    border: "1px solid #334155",
-    borderRadius: 4,
+    width: 96,
+    height: 96,
+    background: "#3f3f3f",
+    borderRadius: 6,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
   placeholderText: {
-    color: "#334155",
+    color: "#565869",
     fontSize: 10,
     textAlign: "center",
     wordBreak: "break-all",
@@ -101,15 +98,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cellLabel: {
     fontSize: 11,
-    color: "#94a3b8",
-    marginTop: 4,
+    color: "#8e8ea0",
+    marginTop: 5,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
   cellMeta: {
     fontSize: 10,
-    color: "#64748b",
+    color: "#565869",
     lineHeight: 1.6,
+    marginTop: 2,
   },
 };

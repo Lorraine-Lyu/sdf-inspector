@@ -29,7 +29,6 @@ export function HyperparamEditor({ status }: HyperparamEditorProps) {
 
   useEffect(() => {
     if (!runId) return;
-    // Load config from run — we fetch the run object which embeds config
     fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:8000"}/api/v1/runs/${runId}`)
       .then((r) => r.json())
       .then((run: { config?: TrainingConfig }) => {
@@ -53,7 +52,6 @@ export function HyperparamEditor({ status }: HyperparamEditorProps) {
   }, []);
 
   const handleApply = useCallback(async () => {
-    // Only send changed fields
     const diff: Partial<TrainingConfig> = {};
     (Object.keys(config) as (keyof TrainingConfig)[]).forEach((k) => {
       if (JSON.stringify(config[k]) !== JSON.stringify(original[k])) {
@@ -79,99 +77,72 @@ export function HyperparamEditor({ status }: HyperparamEditorProps) {
   return (
     <div style={styles.container}>
       <button style={styles.toggle} onClick={() => setExpanded((v) => !v)}>
-        <span style={styles.arrow}>{expanded ? "▼" : "▶"}</span>
+        <span style={styles.arrow}>{expanded ? "▾" : "▸"}</span>
         Hyperparameters
       </button>
       {expanded && (
         <div style={styles.body}>
-          <Row label="Learning Rate">
-            <input
-              type="number"
-              style={styles.input}
-              step={0.0001}
-              min={0.00001}
-              max={0.1}
-              value={config.learning_rate}
-              onChange={(e) => set("learning_rate", parseFloat(e.target.value))}
-            />
-          </Row>
-          <Row label="Batch Size">
-            <input
-              type="number"
-              style={styles.input}
-              step={1}
-              min={1}
-              max={256}
-              value={config.batch_size}
-              onChange={(e) => set("batch_size", parseInt(e.target.value, 10))}
-            />
-          </Row>
-          <Row label="LR Schedule">
-            <select
-              style={styles.input}
-              value={config.lr_schedule}
-              onChange={(e) => set("lr_schedule", e.target.value)}
-            >
-              <option value="cosine">Cosine</option>
-              <option value="step">Step</option>
-              <option value="constant">Constant</option>
-            </select>
-          </Row>
-          <Row label="Max Epochs">
-            <input
-              type="number"
-              style={styles.input}
-              step={1}
-              min={1}
-              value={config.max_epochs}
-              onChange={(e) => set("max_epochs", parseInt(e.target.value, 10))}
-            />
-          </Row>
+          <div style={styles.grid}>
+            <Row label="Learning Rate">
+              <input type="number" style={styles.input}
+                step={0.0001} min={0.00001} max={0.1}
+                value={config.learning_rate}
+                onChange={(e) => set("learning_rate", parseFloat(e.target.value))} />
+            </Row>
+            <Row label="Batch Size">
+              <input type="number" style={styles.input}
+                step={1} min={1} max={256}
+                value={config.batch_size}
+                onChange={(e) => set("batch_size", parseInt(e.target.value, 10))} />
+            </Row>
+            <Row label="LR Schedule">
+              <select style={styles.input} value={config.lr_schedule}
+                onChange={(e) => set("lr_schedule", e.target.value)}>
+                <option value="cosine">Cosine</option>
+                <option value="step">Step</option>
+                <option value="constant">Constant</option>
+              </select>
+            </Row>
+            <Row label="Max Epochs">
+              <input type="number" style={styles.input}
+                step={1} min={1}
+                value={config.max_epochs}
+                onChange={(e) => set("max_epochs", parseInt(e.target.value, 10))} />
+            </Row>
+            <Row label="Curriculum Threshold">
+              <input type="number" style={styles.input}
+                step={0.01} min={0.01} max={1.0}
+                value={config.curriculum_threshold}
+                onChange={(e) => set("curriculum_threshold", parseFloat(e.target.value))} />
+            </Row>
+            <Row label="Auto-Advance">
+              <input type="checkbox"
+                checked={config.curriculum_auto_advance}
+                onChange={(e) => set("curriculum_auto_advance", e.target.checked)}
+                style={{ accentColor: "#10a37f", width: 15, height: 15 }} />
+            </Row>
+          </div>
 
-          <div style={styles.weightSection}>
-            <div style={styles.weightTitle}>Loss Weights</div>
+          <div style={styles.weightsSection}>
+            <div style={styles.weightsLabel}>Loss Weights</div>
             {(["sdf", "eikonal", "regularization"] as const).map((k) => (
-              <Row key={k} label={k.charAt(0).toUpperCase() + k.slice(1)}>
-                <input
-                  type="range"
-                  style={styles.slider}
-                  min={0}
-                  max={1}
-                  step={0.01}
+              <div key={k} style={styles.weightRow}>
+                <span style={styles.weightName}>{k.charAt(0).toUpperCase() + k.slice(1)}</span>
+                <input type="range" style={styles.slider}
+                  min={0} max={1} step={0.01}
                   value={config.loss_weights[k]}
-                  onChange={(e) => setWeight(k, parseFloat(e.target.value))}
-                />
+                  onChange={(e) => setWeight(k, parseFloat(e.target.value))} />
                 <span style={styles.weightVal}>{config.loss_weights[k].toFixed(2)}</span>
-              </Row>
+              </div>
             ))}
           </div>
 
-          <Row label="Auto-Advance Curriculum">
-            <input
-              type="checkbox"
-              checked={config.curriculum_auto_advance}
-              onChange={(e) => set("curriculum_auto_advance", e.target.checked)}
-              style={{ accentColor: "#10b981" }}
-            />
-          </Row>
-          <Row label="Curriculum Threshold">
-            <input
-              type="number"
-              style={styles.input}
-              step={0.01}
-              min={0.01}
-              max={1.0}
-              value={config.curriculum_threshold}
-              onChange={(e) => set("curriculum_threshold", parseFloat(e.target.value))}
-            />
-          </Row>
-
           <div style={styles.footer}>
-            <span style={styles.note}>Changes take effect at next epoch boundary.</span>
+            <span style={styles.note}>Changes take effect at the next epoch boundary.</span>
             <button
               style={{
                 ...styles.applyBtn,
-                opacity: !connected ? 0.4 : 1,
+                opacity: !connected ? 0.35 : 1,
                 cursor: !connected ? "not-allowed" : "pointer",
               }}
               disabled={!connected || saving}
@@ -201,12 +172,11 @@ const rowStyles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    marginBottom: 10,
   },
   label: {
     fontSize: 12,
-    color: "#94a3b8",
-    width: 160,
+    color: "#8e8ea0",
+    width: 140,
     flexShrink: 0,
   },
   control: {
@@ -219,83 +189,98 @@ const rowStyles: Record<string, React.CSSProperties> = {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
+    borderTop: "1px solid #3f3f3f",
+    marginTop: 4,
   },
   toggle: {
     width: "100%",
     background: "none",
     border: "none",
-    color: "#e2e8f0",
+    color: "#8e8ea0",
     cursor: "pointer",
-    padding: "12px 16px",
+    padding: "10px 0 10px",
     textAlign: "left",
     fontSize: 13,
-    fontWeight: 600,
     display: "flex",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   arrow: {
-    fontSize: 10,
-    color: "#64748b",
+    fontSize: 12,
+    color: "#565869",
   },
   body: {
-    padding: "4px 16px 16px",
-    borderTop: "1px solid #334155",
+    paddingBottom: 4,
   },
-  weightSection: {
-    marginTop: 4,
-    marginBottom: 4,
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px 24px",
+    marginBottom: 16,
   },
-  weightTitle: {
+  weightsSection: {
+    marginBottom: 16,
+  },
+  weightsLabel: {
     fontSize: 11,
-    color: "#64748b",
-    marginBottom: 8,
-    marginTop: 4,
+    color: "#565869",
     textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    letterSpacing: "0.04em",
+    marginBottom: 10,
   },
-  input: {
-    background: "#0f172a",
-    border: "1px solid #334155",
-    borderRadius: 4,
-    color: "#e2e8f0",
-    padding: "5px 8px",
-    fontSize: 13,
-    width: 120,
+  weightRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  weightName: {
+    fontSize: 12,
+    color: "#8e8ea0",
+    width: 100,
+    flexShrink: 0,
   },
   slider: {
     flex: 1,
-    accentColor: "#3b82f6",
+    accentColor: "#10a37f",
+    height: 4,
   },
   weightVal: {
     fontSize: 12,
-    color: "#94a3b8",
-    width: 36,
+    color: "#8e8ea0",
+    width: 32,
     textAlign: "right",
     fontVariantNumeric: "tabular-nums",
+  },
+  input: {
+    background: "#212121",
+    border: "1px solid #3f3f3f",
+    borderRadius: 6,
+    color: "#ececec",
+    padding: "6px 10px",
+    fontSize: 12,
+    width: "100%",
+    outline: "none",
   },
   footer: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 16,
     gap: 12,
+    paddingTop: 4,
   },
   note: {
     fontSize: 11,
-    color: "#64748b",
-    fontStyle: "italic",
+    color: "#565869",
   },
   applyBtn: {
-    padding: "7px 20px",
-    background: "#1d4ed8",
+    padding: "7px 18px",
+    background: "#10a37f",
     border: "none",
-    borderRadius: 5,
+    borderRadius: 7,
     color: "#fff",
-    fontSize: 13,
-    fontWeight: 600,
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: "pointer",
   },
 };

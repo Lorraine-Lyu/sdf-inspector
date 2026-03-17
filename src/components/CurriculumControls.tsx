@@ -21,6 +21,7 @@ export function CurriculumControls({ status, onStatusChange }: CurriculumControl
   const connected = status?.worker_connected ?? false;
   const state = status?.state ?? "idle";
   const disabled = !connected || state === "idle" || state === "stopped";
+  const tipMsg = !connected ? "Worker not running" : undefined;
 
   const call = useCallback(
     async (action: "advance" | "hold" | "auto") => {
@@ -34,43 +35,21 @@ export function CurriculumControls({ status, onStatusChange }: CurriculumControl
     [addToast, onStatusChange]
   );
 
-  const tipMsg = !connected ? "Worker not running" : undefined;
-
   return (
     <div style={styles.row}>
-      <div style={styles.tierBadge}>
+      <div style={styles.tierInfo}>
         <span style={styles.tierLabel}>Curriculum</span>
         <span style={styles.tierValue}>
-          {tier !== null
-            ? `Tier ${tier} — ${TIER_LABELS[tier] ?? "Unknown"}`
-            : "—"}
+          {tier !== null ? `Tier ${tier} — ${TIER_LABELS[tier] ?? "Unknown"}` : "—"}
         </span>
       </div>
       <div style={styles.buttons}>
-        <button
-          style={{ ...styles.btn, ...styles.btnAdvance }}
-          disabled={disabled}
-          title={disabled ? tipMsg : "Manually advance to next tier"}
-          onClick={() => void call("advance")}
-        >
-          ▲ Advance
-        </button>
-        <button
-          style={{ ...styles.btn, ...styles.btnHold }}
-          disabled={disabled}
-          title={disabled ? tipMsg : "Disable auto-advance"}
-          onClick={() => void call("hold")}
-        >
-          ■ Hold
-        </button>
-        <button
-          style={{ ...styles.btn, ...styles.btnAuto }}
-          disabled={disabled}
-          title={disabled ? tipMsg : "Re-enable auto-advance"}
-          onClick={() => void call("auto")}
-        >
-          A Auto
-        </button>
+        <button style={styles.btn} disabled={disabled} title={disabled ? tipMsg : "Advance tier"}
+          onClick={() => void call("advance")}>▲ Advance</button>
+        <button style={styles.btn} disabled={disabled} title={disabled ? tipMsg : "Hold auto-advance"}
+          onClick={() => void call("hold")}>■ Hold</button>
+        <button style={styles.btn} disabled={disabled} title={disabled ? tipMsg : "Resume auto-advance"}
+          onClick={() => void call("auto")}>Auto</button>
       </div>
     </div>
   );
@@ -80,47 +59,37 @@ const styles: Record<string, React.CSSProperties> = {
   row: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
     flexWrap: "wrap",
   },
-  tierBadge: {
+  tierInfo: {
     display: "flex",
     flexDirection: "column",
     gap: 2,
   },
   tierLabel: {
     fontSize: 10,
-    color: "#64748b",
+    color: "#565869",
     textTransform: "uppercase",
     letterSpacing: "0.05em",
   },
   tierValue: {
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#60a5fa",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#ececec",
   },
   buttons: {
     display: "flex",
     gap: 6,
   },
   btn: {
-    padding: "6px 12px",
+    padding: "6px 13px",
+    background: "#3f3f3f",
     border: "none",
-    borderRadius: 5,
+    borderRadius: 7,
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 500,
+    color: "#ececec",
     cursor: "pointer",
-  },
-  btnAdvance: {
-    background: "#1d4ed8",
-    color: "#fff",
-  },
-  btnHold: {
-    background: "#374151",
-    color: "#e2e8f0",
-  },
-  btnAuto: {
-    background: "#065f46",
-    color: "#34d399",
   },
 };

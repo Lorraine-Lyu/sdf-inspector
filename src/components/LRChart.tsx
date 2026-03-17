@@ -37,31 +37,31 @@ export function LRChart({ metrics, runId }: LRChartProps) {
   return (
     <div style={styles.container}>
       <div style={styles.header}><span style={styles.title}>LR Schedule</span></div>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={data} margin={{ top: 4, right: 12, bottom: 0, left: -8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#2f2f2f" vertical={false} />
           <XAxis
             dataKey="epoch"
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
-            label={{ value: "Epoch", position: "insideBottomRight", offset: -4, fill: "#64748b", fontSize: 11 }}
+            stroke="transparent"
+            tick={{ fill: "#565869", fontSize: 11 }}
           />
           <YAxis
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
-            tickFormatter={(v: number) => v.toExponential(1)}
+            stroke="transparent"
+            tick={{ fill: "#565869", fontSize: 11 }}
+            tickFormatter={(v) => (typeof v === "number" ? v.toExponential(0) : String(v))}
           />
           <Tooltip
-            contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 6 }}
-            labelStyle={{ color: "#94a3b8", fontSize: 12 }}
+            contentStyle={{ background: "#2f2f2f", border: "none", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}
+            labelStyle={{ color: "#8e8ea0", fontSize: 12, marginBottom: 4 }}
             formatter={(v) => [typeof v === "number" ? v.toExponential(4) : String(v), "LR"]}
+            cursor={{ stroke: "#3f3f3f", strokeWidth: 1 }}
           />
           <Line
             type="monotone"
             dataKey="lr"
-            name="Learning Rate"
-            stroke="#34d399"
-            strokeWidth={2}
+            name="LR"
+            stroke="#10a37f"
+            strokeWidth={1.5}
             dot={false}
             connectNulls
           />
@@ -73,10 +73,9 @@ export function LRChart({ metrics, runId }: LRChartProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
-    padding: "14px 16px",
+    background: "#2f2f2f",
+    borderRadius: 10,
+    padding: "16px 16px 12px",
     flex: 1,
     minWidth: 0,
   },
@@ -85,15 +84,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontSize: 13,
-    fontWeight: 600,
-    color: "#e2e8f0",
+    fontWeight: 500,
+    color: "#ececec",
   },
   empty: {
-    height: 240,
+    height: 220,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#475569",
-    fontSize: 14,
+    color: "#565869",
+    fontSize: 13,
   },
 };

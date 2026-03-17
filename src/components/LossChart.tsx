@@ -31,7 +31,6 @@ export function LossChart({ metrics, runId }: LossChartProps) {
     [metrics]
   );
 
-  // Find tier transition epochs for reference lines
   const tierTransitions = useMemo(() => {
     const transitions: number[] = [];
     for (let i = 1; i < metrics.curriculum_tier.length; i++) {
@@ -61,56 +60,60 @@ export function LossChart({ metrics, runId }: LossChartProps) {
           style={{ ...styles.toggleBtn, ...(logScale ? styles.toggleActive : {}) }}
           onClick={() => setLogScale((v) => !v)}
         >
-          Log scale
+          Log
         </button>
       </div>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={data} margin={{ top: 4, right: 12, bottom: 0, left: -8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#2f2f2f" vertical={false} />
           <XAxis
             dataKey="epoch"
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
-            label={{ value: "Epoch", position: "insideBottomRight", offset: -4, fill: "#64748b", fontSize: 11 }}
+            stroke="transparent"
+            tick={{ fill: "#565869", fontSize: 11 }}
           />
           <YAxis
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
+            stroke="transparent"
+            tick={{ fill: "#565869", fontSize: 11 }}
             scale={logScale ? "log" : "linear"}
             domain={logScale ? ["auto", "auto"] : [0, "auto"]}
             allowDataOverflow
           />
           <Tooltip
-            contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 6 }}
-            labelStyle={{ color: "#94a3b8", fontSize: 12 }}
-            itemStyle={{ fontSize: 12 }}
+            contentStyle={{ background: "#2f2f2f", border: "none", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}
+            labelStyle={{ color: "#8e8ea0", fontSize: 12, marginBottom: 4 }}
+            itemStyle={{ fontSize: 12, color: "#ececec" }}
+            cursor={{ stroke: "#3f3f3f", strokeWidth: 1 }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
+          <Legend
+            wrapperStyle={{ fontSize: 12, color: "#8e8ea0", paddingTop: 8 }}
+            iconType="plainline"
+            iconSize={16}
+          />
           {tierTransitions.map((ep) => (
             <ReferenceLine
               key={ep}
               x={ep}
-              stroke="#f59e0b"
-              strokeDasharray="4 2"
-              label={{ value: "Tier↑", position: "top", fill: "#f59e0b", fontSize: 10 }}
+              stroke="#565869"
+              strokeDasharray="3 3"
+              label={{ value: "tier↑", position: "top", fill: "#565869", fontSize: 10 }}
             />
           ))}
           <Line
             type="monotone"
             dataKey="train"
-            name="Train Loss"
-            stroke="#3b82f6"
-            strokeWidth={2}
+            name="Train"
+            stroke="#ececec"
+            strokeWidth={1.5}
             dot={false}
             connectNulls
           />
           <Line
             type="monotone"
             dataKey="val"
-            name="Val Loss"
-            stroke="#a78bfa"
-            strokeWidth={2}
-            strokeDasharray="5 3"
+            name="Val"
+            stroke="#8e8ea0"
+            strokeWidth={1.5}
+            strokeDasharray="4 2"
             dot={false}
             connectNulls
           />
@@ -122,10 +125,9 @@ export function LossChart({ metrics, runId }: LossChartProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
-    padding: "14px 16px",
+    background: "#2f2f2f",
+    borderRadius: 10,
+    padding: "16px 16px 12px",
     flex: 1,
     minWidth: 0,
   },
@@ -137,29 +139,29 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontSize: 13,
-    fontWeight: 600,
-    color: "#e2e8f0",
+    fontWeight: 500,
+    color: "#ececec",
   },
   toggleBtn: {
     fontSize: 11,
     padding: "3px 10px",
-    background: "#0f172a",
-    border: "1px solid #334155",
-    borderRadius: 4,
-    color: "#94a3b8",
+    background: "transparent",
+    border: "1px solid #3f3f3f",
+    borderRadius: 6,
+    color: "#8e8ea0",
     cursor: "pointer",
   },
   toggleActive: {
-    background: "#1d4ed8",
-    borderColor: "#3b82f6",
-    color: "#fff",
+    background: "#3f3f3f",
+    borderColor: "#565869",
+    color: "#ececec",
   },
   empty: {
-    height: 240,
+    height: 220,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#475569",
-    fontSize: 14,
+    color: "#565869",
+    fontSize: 13,
   },
 };

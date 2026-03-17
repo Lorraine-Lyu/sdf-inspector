@@ -14,7 +14,10 @@ const navItems = [
 export function Sidebar({ wsConnected }: SidebarProps) {
   return (
     <aside style={styles.sidebar}>
-      <div style={styles.logo}>SDF Inspector</div>
+      <div style={styles.logo}>
+        <span style={styles.logoIcon}>◈</span>
+        SDF Inspector
+      </div>
       <nav style={styles.nav}>
         {navItems.map((item) => (
           <div
@@ -33,7 +36,8 @@ export function Sidebar({ wsConnected }: SidebarProps) {
         <span
           style={{
             ...styles.dot,
-            background: wsConnected ? "#10b981" : "#ef4444",
+            background: wsConnected ? "#10a37f" : "#565869",
+            boxShadow: wsConnected ? "0 0 6px #10a37f88" : "none",
           }}
         />
         <span style={styles.connLabel}>
@@ -46,10 +50,9 @@ export function Sidebar({ wsConnected }: SidebarProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   sidebar: {
-    width: 200,
-    minWidth: 200,
-    background: "#111827",
-    borderRight: "1px solid #1f2937",
+    width: 220,
+    minWidth: 220,
+    background: "#171717",
     display: "flex",
     flexDirection: "column",
     height: "100vh",
@@ -58,47 +61,55 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logo: {
     padding: "20px 16px 16px",
-    fontSize: 15,
-    fontWeight: 700,
-    color: "#f9fafb",
-    borderBottom: "1px solid #1f2937",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#ececec",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    borderBottom: "1px solid #2f2f2f",
+  },
+  logoIcon: {
+    fontSize: 16,
+    color: "#10a37f",
   },
   nav: {
     flex: 1,
-    padding: "8px 0",
+    padding: "8px 8px",
   },
   navItem: {
-    padding: "10px 16px",
+    padding: "9px 12px",
     fontSize: 14,
     cursor: "pointer",
-    borderRadius: 4,
-    margin: "2px 8px",
+    borderRadius: 8,
+    margin: "2px 0",
+    transition: "background 0.1s",
   },
   navItemActive: {
-    background: "#1f2937",
-    color: "#f9fafb",
-    fontWeight: 600,
+    background: "#2f2f2f",
+    color: "#ececec",
+    fontWeight: 500,
   },
   navItemDisabled: {
-    color: "#4b5563",
+    color: "#565869",
     cursor: "not-allowed",
   },
   footer: {
-    padding: "16px",
-    borderTop: "1px solid #1f2937",
+    padding: "14px 16px",
+    borderTop: "1px solid #2f2f2f",
     display: "flex",
     alignItems: "center",
     gap: 8,
   },
   dot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: "50%",
     display: "inline-block",
     flexShrink: 0,
   },
   connLabel: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#8e8ea0",
   },
 };

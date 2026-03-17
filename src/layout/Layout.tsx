@@ -19,14 +19,15 @@ const styles: Record<string, React.CSSProperties> = {
   root: {
     display: "flex",
     minHeight: "100vh",
-    background: "#0f172a",
-    color: "#e2e8f0",
-    fontFamily: "'Inter', system-ui, sans-serif",
+    background: "#212121",
+    color: "#ececec",
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
   },
   main: {
     flex: 1,
-    padding: 24,
+    padding: "28px 32px",
     overflowY: "auto",
     minWidth: 0,
+    maxWidth: 1200,
   },
 };

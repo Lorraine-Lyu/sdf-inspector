@@ -26,10 +26,10 @@ function formatRelativeTime(iso: string): string {
 
 function stateColor(state: TrainingStatus["state"]): string {
   switch (state) {
-    case "training": return "#10b981";
-    case "paused":   return "#f59e0b";
+    case "training": return "#10a37f";
+    case "paused":   return "#f5a623";
     case "error":    return "#ef4444";
-    default:         return "#6b7280";
+    default:         return "#565869";
   }
 }
 
@@ -43,7 +43,7 @@ function Card({ label, value, valueColor }: CardProps) {
   return (
     <div style={styles.card}>
       <div style={styles.cardLabel}>{label}</div>
-      <div style={{ ...styles.cardValue, color: valueColor ?? "#f9fafb" }}>{value}</div>
+      <div style={{ ...styles.cardValue, color: valueColor ?? "#ececec" }}>{value}</div>
     </div>
   );
 }
@@ -66,38 +66,34 @@ export function MetricCards({ status }: MetricCardsProps) {
     <div>
       {workerWarning && (
         <div style={styles.workerWarning}>
-          ⚠ Worker disconnected — live updates unavailable
+          Worker disconnected — live updates unavailable
         </div>
       )}
       <div style={styles.row}>
         <Card
           label="Epoch"
           value={status.epoch !== null ? status.epoch : "—"}
-          valueColor={status.epoch !== null ? undefined : "#6b7280"}
+          valueColor={status.epoch !== null ? undefined : "#565869"}
         />
         <Card
           label="Train Loss"
           value={status.loss !== null ? status.loss.toFixed(4) : "—"}
-          valueColor={status.loss !== null ? undefined : "#6b7280"}
+          valueColor={status.loss !== null ? undefined : "#565869"}
         />
         <Card
           label="Val Loss"
           value={status.val_loss !== null ? status.val_loss.toFixed(4) : "—"}
-          valueColor={status.val_loss !== null ? undefined : "#6b7280"}
+          valueColor={status.val_loss !== null ? undefined : "#565869"}
         />
         <Card
           label="Learning Rate"
-          value={
-            status.lr !== null
-              ? status.lr.toExponential(2)
-              : "—"
-          }
-          valueColor={status.lr !== null ? undefined : "#6b7280"}
+          value={status.lr !== null ? status.lr.toExponential(2) : "—"}
+          valueColor={status.lr !== null ? undefined : "#565869"}
         />
         <Card
           label="ETA"
           value={formatEta(status.eta_seconds)}
-          valueColor={status.eta_seconds !== null ? undefined : "#6b7280"}
+          valueColor={status.eta_seconds !== null ? undefined : "#565869"}
         />
         <Card
           label="Tier"
@@ -106,22 +102,32 @@ export function MetricCards({ status }: MetricCardsProps) {
               ? TIER_LABELS[status.curriculum_tier] ?? `Tier ${status.curriculum_tier}`
               : "—"
           }
-          valueColor={status.curriculum_tier !== null ? "#60a5fa" : "#6b7280"}
+          valueColor={status.curriculum_tier !== null ? "#ececec" : "#565869"}
         />
         <Card
           label="State"
           value={
             <span
               style={{
-                background: stateColor(status.state) + "22",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
                 color: stateColor(status.state),
-                padding: "2px 10px",
-                borderRadius: 12,
                 fontSize: 13,
-                fontWeight: 600,
-                border: `1px solid ${stateColor(status.state)}55`,
+                fontWeight: 500,
               }}
             >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: stateColor(status.state),
+                  boxShadow: status.state === "training" ? "0 0 6px #10a37f88" : "none",
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
               {status.state}
             </span>
           }
@@ -130,7 +136,7 @@ export function MetricCards({ status }: MetricCardsProps) {
           <Card
             label="Backup"
             value={`Epoch ${status.last_backup.epoch} · ${formatRelativeTime(status.last_backup.timestamp)}`}
-            valueColor={status.last_backup.success ? "#10b981" : "#ef4444"}
+            valueColor={status.last_backup.success ? "#10a37f" : "#ef4444"}
           />
         )}
       </div>
@@ -142,37 +148,36 @@ const styles: Record<string, React.CSSProperties> = {
   row: {
     display: "flex",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 8,
   },
   card: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
+    background: "#2f2f2f",
+    borderRadius: 10,
     padding: "12px 16px",
-    minWidth: 110,
-    flex: "1 1 110px",
+    minWidth: 100,
+    flex: "1 1 100px",
   },
   cardLabel: {
     fontSize: 11,
-    color: "#94a3b8",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    color: "#8e8ea0",
     marginBottom: 6,
+    letterSpacing: "0.02em",
   },
   cardValue: {
-    fontSize: 20,
-    fontWeight: 700,
+    fontSize: 18,
+    fontWeight: 600,
     fontVariantNumeric: "tabular-nums",
+    letterSpacing: "-0.01em",
   },
   placeholder: {
-    color: "#4b5563",
+    color: "#565869",
     fontSize: 14,
   },
   workerWarning: {
-    background: "#431407",
-    border: "1px solid #ea580c",
+    background: "#2f2f2f",
+    borderLeft: "3px solid #f5a623",
     borderRadius: 6,
-    color: "#fdba74",
+    color: "#f5a623",
     padding: "8px 14px",
     fontSize: 13,
     marginBottom: 12,

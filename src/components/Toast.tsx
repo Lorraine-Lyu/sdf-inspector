@@ -39,7 +39,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         <div style={styles.container}>
           {toasts.map((t) => (
             <div key={t.id} style={{ ...styles.toast, ...severityStyle(t.severity) }}>
-              <span>{t.message}</span>
+              <span style={{ flex: 1 }}>{t.message}</span>
               <button style={styles.close} onClick={() => dismiss(t.id)}>×</button>
             </div>
           ))}
@@ -56,10 +56,10 @@ export function useToast() {
 
 function severityStyle(s: ToastSeverity): React.CSSProperties {
   switch (s) {
-    case "info":    return { background: "#1d4ed8", borderLeft: "4px solid #3b82f6" };
-    case "warning": return { background: "#92400e", borderLeft: "4px solid #f59e0b" };
-    case "error":   return { background: "#991b1b", borderLeft: "4px solid #ef4444" };
-    case "success": return { background: "#065f46", borderLeft: "4px solid #10b981" };
+    case "info":    return { borderLeft: "3px solid #565869" };
+    case "warning": return { borderLeft: "3px solid #f5a623" };
+    case "error":   return { borderLeft: "3px solid #ef4444" };
+    case "success": return { borderLeft: "3px solid #10a37f" };
   }
 }
 
@@ -72,28 +72,28 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: 8,
     zIndex: 9999,
-    maxWidth: 360,
+    maxWidth: 340,
   },
   toast: {
-    color: "#fff",
+    background: "#2f2f2f",
+    color: "#ececec",
     padding: "10px 14px",
-    borderRadius: 6,
+    borderRadius: 8,
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-    fontSize: 14,
+    gap: 10,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+    fontSize: 13,
     animation: "slideIn 0.2s ease",
   },
   close: {
     background: "none",
     border: "none",
-    color: "#fff",
+    color: "#565869",
     cursor: "pointer",
-    fontSize: 18,
+    fontSize: 16,
     lineHeight: 1,
     padding: 0,
-    opacity: 0.8,
+    flexShrink: 0,
   },
 };

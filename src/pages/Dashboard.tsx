@@ -21,28 +21,27 @@ export function Dashboard({ status, metrics, recentScenes, refetch }: DashboardP
 
   return (
     <div style={styles.page}>
-      <section>
-        <MetricCards status={status} />
-      </section>
+      <div style={styles.sectionLabel}>Overview</div>
+      <MetricCards status={status} />
 
-      <section style={styles.row}>
+      <div style={styles.row}>
         <LossChart metrics={metrics} runId={runId} />
         <LRChart metrics={metrics} runId={runId} />
-      </section>
+      </div>
 
-      <section style={styles.row}>
+      <div style={styles.row}>
         <LossDecomposition metrics={metrics} runId={runId} />
         <RecentReconstructions scenes={recentScenes} />
-      </section>
+      </div>
 
-      <section style={styles.controlsSection}>
-        <div style={styles.controlsRow}>
+      <div style={styles.controlsCard}>
+        <div style={styles.controlsTop}>
           <TrainingControls status={status} onStatusChange={refetch} />
           <div style={styles.divider} />
           <CurriculumControls status={status} onStatusChange={refetch} />
         </div>
         <HyperparamEditor status={status} />
-      </section>
+      </div>
     </div>
   );
 }
@@ -53,20 +52,23 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: 16,
   },
+  sectionLabel: {
+    fontSize: 11,
+    color: "#565869",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    marginBottom: -4,
+  },
   row: {
     display: "flex",
-    gap: 16,
-  },
-  controlsSection: {
-    display: "flex",
-    flexDirection: "column",
     gap: 12,
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 8,
-    padding: 16,
   },
-  controlsRow: {
+  controlsCard: {
+    background: "#2f2f2f",
+    borderRadius: 10,
+    padding: "16px 20px",
+  },
+  controlsTop: {
     display: "flex",
     alignItems: "center",
     gap: 24,
@@ -74,8 +76,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   divider: {
     width: 1,
-    height: 40,
-    background: "#334155",
+    height: 36,
+    background: "#3f3f3f",
     flexShrink: 0,
   },
 };
