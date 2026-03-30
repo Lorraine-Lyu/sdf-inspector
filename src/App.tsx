@@ -27,9 +27,17 @@ function AppInner() {
     [addToast]
   );
 
+  const handleStatusEvent = useCallback(
+    (ev: Parameters<typeof applyStatusEvent>[0]) => {
+      applyStatusEvent(ev);
+      void refetch();
+    },
+    [applyStatusEvent, refetch]
+  );
+
   const { metrics, recentScenes, wsConnected } = useMetricsStream({
     runId: status?.run_id ?? null,
-    onStatusEvent: applyStatusEvent,
+    onStatusEvent: handleStatusEvent,
     onCurriculumEvent: applyCurriculumEvent,
     onMetricsUpdate: applyMetricsUpdate,
     onAlert: handleAlert,
