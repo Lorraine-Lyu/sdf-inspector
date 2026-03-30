@@ -32,6 +32,8 @@ export const api = {
 
   pauseTraining: () => post<{ status: string; state: string; epoch: number }>("/training/pause"),
 
+  resumeTraining: () => post<{ status: string; state: string; epoch: number }>("/training/resume"),
+
   stopTraining: () => post<{ status: string; state: string; epoch: number }>("/training/stop"),
 
   updateConfig: (config: Partial<TrainingConfig>) =>

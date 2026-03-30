@@ -24,6 +24,15 @@ export function TrainingControls({ status, onStatusChange }: TrainingControlsPro
     }
   }, [addToast, onStatusChange]);
 
+  const handleResume = useCallback(async () => {
+    try {
+      await api.resumeTraining();
+      onStatusChange();
+    } catch (e) {
+      addToast((e as Error).message, "error");
+    }
+  }, [addToast, onStatusChange]);
+
   const handleStop = useCallback(async () => {
     try {
       await api.stopTraining();
@@ -35,8 +44,8 @@ export function TrainingControls({ status, onStatusChange }: TrainingControlsPro
 
   const canStart = state === "idle" || state === "stopped";
   const canPause = state === "training" && connected;
+  const canResume = state === "paused" && connected;
   const canStop = (state === "training" || state === "paused") && connected;
-  const disabledTip = !connected ? "Worker not running" : undefined;
 
   return (
     <div style={styles.row}>
@@ -51,15 +60,20 @@ export function TrainingControls({ status, onStatusChange }: TrainingControlsPro
         <button
           style={styles.btn}
           disabled={!canPause}
-          title={!canPause && !canStart ? disabledTip : undefined}
           onClick={handlePause}
         >
           Pause
         </button>
         <button
           style={styles.btn}
+          disabled={!canResume}
+          onClick={handleResume}
+        >
+          Resume
+        </button>
+        <button
+          style={styles.btn}
           disabled={!canStop}
-          title={!canStop && state !== "idle" ? disabledTip : undefined}
           onClick={handleStop}
         >
           Stop
@@ -105,7 +119,6 @@ function StartDialog({
   const [experimentId, setExperimentId] = useState("");
   const [runId, setRunId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [cliCommand, setCliCommand] = useState<string | null>(null);
 
   useEffect(() => {
     api.listExperiments().then((exps) => {
@@ -118,11 +131,10 @@ function StartDialog({
     if (!experimentId) return;
     setLoading(true);
     try {
-      const result = await api.startTraining(experimentId, runId || undefined);
-      const rid = (result as { run_id?: string }).run_id ?? runId ?? "run_001";
-      setCliCommand(`python -m worker --experiment ${experimentId} --run ${rid} --data-dir data/`);
-      addToast("Run created — start the worker to begin training", "success");
+      await api.startTraining(experimentId, runId || undefined);
+      addToast("Training started", "success");
       onStarted();
+      onClose();
     } catch (e) {
       addToast((e as Error).message, "error");
     } finally {
@@ -158,26 +170,17 @@ function StartDialog({
           onChange={(e) => setRunId(e.target.value)}
         />
 
-        {cliCommand && (
-          <div style={dialogStyles.cliBox}>
-            <div style={dialogStyles.cliLabel}>Start the worker with:</div>
-            <code style={dialogStyles.cli}>{cliCommand}</code>
-          </div>
-        )}
-
         <div style={dialogStyles.actions}>
           <button style={dialogStyles.btnCancel} onClick={onClose}>
-            {cliCommand ? "Close" : "Cancel"}
+            Cancel
           </button>
-          {!cliCommand && (
-            <button
-              style={dialogStyles.btnConfirm}
-              onClick={handleStart}
-              disabled={!experimentId || loading}
-            >
-              {loading ? "Creating…" : "Create Run"}
-            </button>
-          )}
+          <button
+            style={dialogStyles.btnConfirm}
+            onClick={handleStart}
+            disabled={!experimentId || loading}
+          >
+            {loading ? "Starting…" : "Start Run"}
+          </button>
         </div>
       </div>
     </div>
@@ -258,23 +261,6 @@ const dialogStyles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     marginBottom: 14,
     outline: "none",
-  },
-  cliBox: {
-    background: "#212121",
-    borderRadius: 8,
-    padding: "10px 14px",
-    marginBottom: 18,
-  },
-  cliLabel: {
-    fontSize: 11,
-    color: "#8e8ea0",
-    marginBottom: 6,
-  },
-  cli: {
-    fontSize: 12,
-    color: "#10a37f",
-    wordBreak: "break-all",
-    fontFamily: "ui-monospace, monospace",
   },
   actions: {
     display: "flex",
