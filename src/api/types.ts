@@ -98,6 +98,50 @@ export interface AlertEvent {
   message: string;
 }
 
+export interface SceneDefinition {
+  id: string;
+  split: string;
+  tags: string[];
+  complexity: {
+    primitive_count: number;
+    expression_depth: number;
+    tier: number;
+  };
+  ground_truth_sdf: string;
+  bounds: {
+    center: [number, number, number];
+    half_extent: [number, number, number];
+  };
+  source: string;
+}
+
+export interface ReconstructionMetrics {
+  chamfer_distance: number;
+  iou: number;
+  loss: number;
+}
+
+export interface Reconstruction {
+  scene_id: string;
+  run_id: string;
+  checkpoint_id: string;
+  predicted_sdf: string;
+  metrics: ReconstructionMetrics;
+}
+
+export interface CheckpointMeta {
+  id: string;
+  epoch: number;
+  val_loss: number;
+  created_at: string;
+}
+
+export interface CameraState {
+  position: [number, number, number];
+  target: [number, number, number];
+  zoom: number;
+}
+
 export type WsEvent =
   | MetricsEvent
   | CheckpointEvent

@@ -1,17 +1,14 @@
 import React from "react";
+import { NavLink, useMatch } from "react-router-dom";
 
 interface SidebarProps {
   wsConnected: boolean;
 }
 
-const navItems = [
-  { label: "Dashboard", path: "/", active: true },
-  { label: "Scene Catalog", path: "/scenes", active: false, tooltip: "Coming in Phase 2" },
-  { label: "Experiments", path: "/experiments", active: false, tooltip: "Coming in Phase 3" },
-  { label: "Settings", path: "/settings", active: false },
-];
-
 export function Sidebar({ wsConnected }: SidebarProps) {
+  const sceneMatch = useMatch("/scene/:sceneId");
+  const sceneId = sceneMatch?.params.sceneId;
+
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
@@ -19,18 +16,33 @@ export function Sidebar({ wsConnected }: SidebarProps) {
         SDF Inspector
       </div>
       <nav style={styles.nav}>
-        {navItems.map((item) => (
-          <div
-            key={item.label}
-            title={!item.active ? item.tooltip : undefined}
-            style={{
-              ...styles.navItem,
-              ...(item.active ? styles.navItemActive : styles.navItemDisabled),
-            }}
-          >
-            {item.label}
-          </div>
-        ))}
+        <NavLink
+          to="/"
+          end
+          style={({ isActive }) => ({
+            ...styles.navItem,
+            ...(isActive ? styles.navItemActive : styles.navItemInactive),
+          })}
+        >
+          Dashboard
+        </NavLink>
+
+        <div
+          style={{
+            ...styles.navItem,
+            ...(sceneId ? styles.navItemActive : styles.navItemDisabled),
+          }}
+        >
+          Scene Detail
+          {sceneId && <div style={styles.navSub}>{sceneId}</div>}
+        </div>
+
+        <div style={{ ...styles.navItem, ...styles.navItemDisabled }} title="Coming in Phase 3">
+          Experiments
+        </div>
+        <div style={{ ...styles.navItem, ...styles.navItemDisabled }}>
+          Settings
+        </div>
       </nav>
       <div style={styles.footer}>
         <span
@@ -80,19 +92,31 @@ const styles: Record<string, React.CSSProperties> = {
   navItem: {
     padding: "9px 12px",
     fontSize: 14,
-    cursor: "pointer",
     borderRadius: 8,
     margin: "2px 0",
-    transition: "background 0.1s",
+    display: "block",
+    textDecoration: "none",
   },
   navItemActive: {
     background: "#2f2f2f",
     color: "#ececec",
     fontWeight: 500,
   },
+  navItemInactive: {
+    color: "#8e8ea0",
+    cursor: "pointer",
+  },
   navItemDisabled: {
     color: "#565869",
     cursor: "not-allowed",
+  },
+  navSub: {
+    fontSize: 11,
+    color: "#565869",
+    marginTop: 2,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
   },
   footer: {
     padding: "14px 16px",

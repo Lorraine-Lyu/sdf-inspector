@@ -1,4 +1,4 @@
-import type { Experiment, MetricsHistory, TrainingConfig, TrainingStatus } from "./types";
+import type { CheckpointMeta, Experiment, MetricsHistory, Reconstruction, SceneDefinition, TrainingConfig, TrainingStatus } from "./types";
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000") + "/api/v1";
 
@@ -45,4 +45,14 @@ export const api = {
   listExperiments: () => get<Experiment[]>("/experiments"),
 
   getRunMetrics: (runId: string) => get<MetricsHistory>(`/runs/${runId}/metrics`),
+
+  listCheckpoints: (runId: string) => get<CheckpointMeta[]>(`/runs/${runId}/checkpoints`),
+
+  getScene: (sceneId: string) => get<SceneDefinition>(`/scenes/${sceneId}`),
+
+  getReconstruction: (sceneId: string, runId: string, checkpointId?: string) => {
+    const params = new URLSearchParams({ run_id: runId });
+    if (checkpointId) params.set("checkpoint_id", checkpointId);
+    return get<Reconstruction>(`/scenes/${sceneId}/reconstruction?${params}`);
+  },
 };

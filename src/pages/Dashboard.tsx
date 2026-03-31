@@ -31,7 +31,7 @@ export function Dashboard({ status, metrics, recentScenes, refetch }: DashboardP
 
       <div style={styles.row}>
         <LossDecomposition metrics={metrics} runId={runId} />
-        <RecentReconstructions scenes={recentScenes} />
+        <RecentReconstructions scenes={recentScenes} status={status} />
       </div>
 
       <div style={styles.controlsCard}>
