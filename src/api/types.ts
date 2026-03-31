@@ -136,6 +136,34 @@ export interface CheckpointMeta {
   created_at: string;
 }
 
+export interface RunConfig {
+  experiment_id: string;
+  run_id: string;
+  config: TrainingConfig & { model_architecture: string };
+  created_at: string;
+  forked_from_checkpoint: string | null;
+  git_commit: string | null;
+  git_dirty: boolean;
+}
+
+export interface RunDetail {
+  id: string;
+  experiment_id: string;
+  config: TrainingConfig & { model_architecture: string };
+  state: string;
+  epochs_completed: number;
+  best_val_loss: number | null;
+  created_at: string;
+  git_commit: string | null;
+  git_dirty: boolean;
+}
+
+export interface RunReconstructionSummary {
+  scene_id: string;
+  checkpoint_id: string;
+  metrics: ReconstructionMetrics;
+}
+
 export interface CameraState {
   position: [number, number, number];
   target: [number, number, number];

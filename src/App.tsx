@@ -6,6 +6,7 @@ import { useMetricsStream } from "./hooks/useMetricsStream";
 import { useTrainingStatus } from "./hooks/useTrainingStatus";
 import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
+import { Experiments } from "./pages/Experiments";
 import { SceneDetailPage } from "./pages/SceneDetailPage";
 
 function AppInner() {
@@ -60,6 +61,7 @@ function AppInner() {
           }
         />
         <Route path="/scene/:sceneId" element={<SceneDetailPage />} />
+        <Route path="/experiments" element={<Experiments />} />
       </Routes>
     </Layout>
   );

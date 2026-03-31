@@ -1,4 +1,4 @@
-import type { CheckpointMeta, Experiment, MetricsHistory, Reconstruction, SceneDefinition, TrainingConfig, TrainingStatus } from "./types";
+import type { CheckpointMeta, Experiment, MetricsHistory, Reconstruction, RunConfig, RunDetail, RunReconstructionSummary, SceneDefinition, TrainingConfig, TrainingStatus } from "./types";
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000") + "/api/v1";
 
@@ -44,9 +44,31 @@ export const api = {
 
   listExperiments: () => get<Experiment[]>("/experiments"),
 
-  getRunMetrics: (runId: string) => get<MetricsHistory>(`/runs/${runId}/metrics`),
+  createExperiment: (body: { name: string; description?: string; config?: object }) =>
+    post<Experiment>("/experiments", body),
+
+  listRuns: (experimentId: string) => get<RunConfig[]>(`/experiments/${experimentId}/runs`),
+
+  createRun: (experimentId: string, forkFromCheckpoint?: string) =>
+    post<RunConfig>(`/experiments/${experimentId}/runs`, { fork_from_checkpoint: forkFromCheckpoint ?? null }),
+
+  getRun: (runId: string) => get<RunDetail>(`/runs/${runId}`),
+
+  getRunMetrics: (runId: string, startEpoch?: number, endEpoch?: number) => {
+    const params = new URLSearchParams();
+    if (startEpoch !== undefined) params.set("start_epoch", String(startEpoch));
+    if (endEpoch !== undefined) params.set("end_epoch", String(endEpoch));
+    const qs = params.toString();
+    return get<MetricsHistory>(`/runs/${runId}/metrics${qs ? `?${qs}` : ""}`);
+  },
 
   listCheckpoints: (runId: string) => get<CheckpointMeta[]>(`/runs/${runId}/checkpoints`),
+
+  getRunReconstructions: (runId: string) =>
+    get<RunReconstructionSummary[]>(`/runs/${runId}/reconstructions`),
+
+  evaluate: (sceneIds: string[], checkpointId: string) =>
+    post<{ status: string; scene_count: number }>("/scenes/evaluate", { scene_ids: sceneIds, checkpoint_id: checkpointId }),
 
   getScene: (sceneId: string) => get<SceneDefinition>(`/scenes/${sceneId}`),
 

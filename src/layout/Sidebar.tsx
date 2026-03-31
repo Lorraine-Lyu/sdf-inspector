@@ -37,9 +37,15 @@ export function Sidebar({ wsConnected }: SidebarProps) {
           {sceneId && <div style={styles.navSub}>{sceneId}</div>}
         </div>
 
-        <div style={{ ...styles.navItem, ...styles.navItemDisabled }} title="Coming in Phase 3">
+        <NavLink
+          to="/experiments"
+          style={({ isActive }) => ({
+            ...styles.navItem,
+            ...(isActive ? styles.navItemActive : styles.navItemInactive),
+          })}
+        >
           Experiments
-        </div>
+        </NavLink>
         <div style={{ ...styles.navItem, ...styles.navItemDisabled }}>
           Settings
         </div>
