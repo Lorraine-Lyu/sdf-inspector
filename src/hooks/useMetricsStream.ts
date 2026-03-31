@@ -44,10 +44,12 @@ export function useMetricsStream({
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unmountedRef = useRef(false);
 
-  // Load historical metrics when runId changes
+  // Load historical metrics when runId changes; clear derived state when idle
   useEffect(() => {
     if (!runId) {
       setMetrics(EMPTY_HISTORY);
+      setCheckpoints([]);
+      setRecentScenes([]);
       return;
     }
     api.getRunMetrics(runId).then(setMetrics).catch(() => {
