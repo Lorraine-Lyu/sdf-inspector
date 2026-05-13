@@ -1,14 +1,18 @@
 import React from "react";
-import { NavLink, useMatch } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 interface SidebarProps {
   wsConnected: boolean;
 }
 
-export function Sidebar({ wsConnected }: SidebarProps) {
-  const sceneMatch = useMatch("/scene/:sceneId");
-  const sceneId = sceneMatch?.params.sceneId;
+const NAV_ITEMS: Array<{ to: string; label: string; end?: boolean }> = [
+  { to: "/", label: "Dashboard", end: true },
+  { to: "/experiments", label: "Experiments" },
+  { to: "/scenes", label: "Scenes" },
+  { to: "/playground", label: "Playground" },
+];
 
+export function Sidebar({ wsConnected }: SidebarProps) {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
@@ -16,39 +20,19 @@ export function Sidebar({ wsConnected }: SidebarProps) {
         SDF Inspector
       </div>
       <nav style={styles.nav}>
-        <NavLink
-          to="/"
-          end
-          style={({ isActive }) => ({
-            ...styles.navItem,
-            ...(isActive ? styles.navItemActive : styles.navItemInactive),
-          })}
-        >
-          Dashboard
-        </NavLink>
-
-        <div
-          style={{
-            ...styles.navItem,
-            ...(sceneId ? styles.navItemActive : styles.navItemDisabled),
-          }}
-        >
-          Scene Detail
-          {sceneId && <div style={styles.navSub}>{sceneId}</div>}
-        </div>
-
-        <NavLink
-          to="/experiments"
-          style={({ isActive }) => ({
-            ...styles.navItem,
-            ...(isActive ? styles.navItemActive : styles.navItemInactive),
-          })}
-        >
-          Experiments
-        </NavLink>
-        <div style={{ ...styles.navItem, ...styles.navItemDisabled }}>
-          Settings
-        </div>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            style={({ isActive }) => ({
+              ...styles.navItem,
+              ...(isActive ? styles.navItemActive : styles.navItemInactive),
+            })}
+          >
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
       <div style={styles.footer}>
         <span
@@ -58,9 +42,7 @@ export function Sidebar({ wsConnected }: SidebarProps) {
             boxShadow: wsConnected ? "0 0 6px #10a37f88" : "none",
           }}
         />
-        <span style={styles.connLabel}>
-          {wsConnected ? "Live" : "Disconnected"}
-        </span>
+        <span style={styles.connLabel}>{wsConnected ? "Live" : "Disconnected"}</span>
       </div>
     </aside>
   );
@@ -111,18 +93,6 @@ const styles: Record<string, React.CSSProperties> = {
   navItemInactive: {
     color: "#8e8ea0",
     cursor: "pointer",
-  },
-  navItemDisabled: {
-    color: "#565869",
-    cursor: "not-allowed",
-  },
-  navSub: {
-    fontSize: 11,
-    color: "#565869",
-    marginTop: 2,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap" as const,
   },
   footer: {
     padding: "14px 16px",

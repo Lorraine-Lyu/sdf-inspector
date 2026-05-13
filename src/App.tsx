@@ -7,18 +7,13 @@ import { useTrainingStatus } from "./hooks/useTrainingStatus";
 import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { Experiments } from "./pages/Experiments";
-import { SceneDetailPage } from "./pages/SceneDetailPage";
+import { Playground } from "./pages/Playground";
+import { SceneBrowser } from "./pages/SceneBrowser";
 
 function AppInner() {
   const { addToast } = useToast();
 
-  const {
-    status,
-    refetch,
-    applyStatusEvent,
-    applyCurriculumEvent,
-    applyMetricsUpdate,
-  } = useTrainingStatus();
+  const { status, refetch, applyStatusEvent, applyMetricsUpdate } = useTrainingStatus();
 
   const handleAlert = useCallback(
     (ev: AlertEvent) => {
@@ -38,10 +33,9 @@ function AppInner() {
     [applyStatusEvent, refetch]
   );
 
-  const { metrics, recentScenes, wsConnected } = useMetricsStream({
+  const { metrics, latestDiagnosticEpoch, wsConnected } = useMetricsStream({
     runId: status?.run_id ?? null,
     onStatusEvent: handleStatusEvent,
-    onCurriculumEvent: applyCurriculumEvent,
     onMetricsUpdate: applyMetricsUpdate,
     onAlert: handleAlert,
   });
@@ -55,13 +49,13 @@ function AppInner() {
             <Dashboard
               status={status}
               metrics={metrics}
-              recentScenes={recentScenes}
-              refetch={refetch}
+              latestDiagnosticEpoch={latestDiagnosticEpoch}
             />
           }
         />
-        <Route path="/scene/:sceneId" element={<SceneDetailPage />} />
         <Route path="/experiments" element={<Experiments />} />
+        <Route path="/scenes" element={<SceneBrowser />} />
+        <Route path="/playground" element={<Playground />} />
       </Routes>
     </Layout>
   );

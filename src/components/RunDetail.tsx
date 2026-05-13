@@ -1,72 +1,48 @@
-import React, { useState } from "react";
-import type { Experiment, RunDetail as RunDetailType } from "../api/types";
+import React from "react";
+import type { RunConfig } from "../api/types";
 import { CheckpointList } from "./CheckpointList";
-import { ConfigDiff } from "./ConfigDiff";
-import { LossChart } from "./LossChart";
-import { LossDecomposition } from "./LossDecomposition";
-import { LRChart } from "./LRChart";
+import { MetricLineChart } from "./MetricLineChart";
+import { SlotDiagnosticsTab } from "./experiments/SlotDiagnosticsTab";
 import { useCheckpoints } from "../hooks/useCheckpoints";
 import { useRunDetail } from "../hooks/useRunDetail";
 import { useRunMetrics } from "../hooks/useRunMetrics";
 
+export type RunTab = "config" | "metrics" | "checkpoints" | "slots";
+const TABS: RunTab[] = ["config", "metrics", "checkpoints", "slots"];
+
 interface RunDetailProps {
   runId: string;
-  experiments: Experiment[];
-  allRuns: { runId: string; experimentId: string }[];
-  onForked: () => void;
+  tab: RunTab;
+  onTabChange: (tab: RunTab) => void;
 }
 
-type Tab = "config" | "metrics" | "checkpoints";
-
-function StateBadge({ state }: { state: string }) {
-  const colors: Record<string, string> = { training: "#10a37f", paused: "#f5a623", stopped: "#565869", error: "#ef4444" };
-  const color = colors[state] ?? "#565869";
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, display: "inline-block" }} />
-      {state}
-    </span>
-  );
-}
-
-function ConfigRow({ label, value, mono = false, warn = false }: { label: string; value: React.ReactNode; mono?: boolean; warn?: boolean }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 8, padding: "6px 0", borderTop: "1px solid #3f3f3f" }}>
-      <span style={{ fontSize: 12, color: "#8e8ea0" }}>{label}</span>
-      <span style={{ fontSize: 13, color: warn ? "#f5a623" : "#ececec", fontFamily: mono ? "ui-monospace, monospace" : undefined }}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-export function RunDetail({ runId, experiments, allRuns, onForked }: RunDetailProps) {
+export function RunDetail({ runId, tab, onTabChange }: RunDetailProps) {
   const { run, loading } = useRunDetail(runId);
   const { metrics } = useRunMetrics(runId);
-  const { checkpoints, refetch: refetchCheckpoints } = useCheckpoints(runId);
-  const [tab, setTab] = useState<Tab>("config");
-  const [diffRunId, setDiffRunId] = useState<string>("");
-  const { run: diffRun } = useRunDetail(diffRunId || null);
+  const { checkpoints } = useCheckpoints(runId);
 
   if (loading) return <div style={s.loading}>Loading…</div>;
-  if (!run) return <div style={s.loading}>Select a run</div>;
-
-  const c = run.config;
+  if (!run) return <div style={s.loading}>Run not found</div>;
 
   return (
     <div style={s.root}>
       <div style={s.summary}>
         <div style={s.runId}>{run.id}</div>
         <div style={s.summaryRow}>
-          <StateBadge state={run.state} />
-          <span style={s.meta}>Epochs: {run.epochs_completed}</span>
-          {run.best_val_loss !== null && <span style={s.meta}>Best val loss: {run.best_val_loss.toFixed(4)}</span>}
+          <span style={s.meta}>Experiment: {run.experiment_id}</span>
+          {checkpoints.length > 0 && (
+            <span style={s.meta}>{checkpoints.length} checkpoints</span>
+          )}
         </div>
       </div>
 
       <div style={s.tabs}>
-        {(["config", "metrics", "checkpoints"] as Tab[]).map((t) => (
-          <button key={t} style={{ ...s.tab, ...(tab === t ? s.tabActive : {}) }} onClick={() => setTab(t)}>
+        {TABS.map((t) => (
+          <button
+            key={t}
+            style={{ ...s.tab, ...(tab === t ? s.tabActive : {}) }}
+            onClick={() => onTabChange(t)}
+          >
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
@@ -74,41 +50,10 @@ export function RunDetail({ runId, experiments, allRuns, onForked }: RunDetailPr
 
       {tab === "config" && (
         <div style={s.tabContent}>
-          {!diffRun ? (
-            <>
-              <ConfigRow label="Model Architecture" value={c.model_architecture ?? "—"} />
-              <ConfigRow label="Learning Rate" value={c.learning_rate} mono />
-              <ConfigRow label="Batch Size" value={c.batch_size} mono />
-              <ConfigRow label="LR Schedule" value={c.lr_schedule} />
-              <ConfigRow label="Loss Weights" value={`sdf: ${c.loss_weights.sdf}, eikonal: ${c.loss_weights.eikonal}, reg: ${c.loss_weights.regularization}`} mono />
-              <ConfigRow label="Max Epochs" value={c.max_epochs} mono />
-              <ConfigRow label="Curriculum Auto" value={c.curriculum_auto_advance ? "yes" : "no"} />
-              <ConfigRow label="Curriculum Threshold" value={c.curriculum_threshold} mono />
-              <ConfigRow
-                label="Git Commit"
-                value={<><code style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{run.git_commit ?? "—"}</code>{run.git_dirty && <span style={{ marginLeft: 8, color: "#f5a623", fontSize: 11 }}>dirty</span>}</>}
-              />
-              <ConfigRow label="Created At" value={new Date(run.created_at).toLocaleString()} />
-
-              <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, color: "#8e8ea0" }}>Diff with:</span>
-                <select
-                  style={s.select}
-                  value={diffRunId}
-                  onChange={(e) => setDiffRunId(e.target.value)}
-                >
-                  <option value="">Select run…</option>
-                  {allRuns.filter((r) => r.runId !== runId).map((r) => (
-                    <option key={r.runId} value={r.runId}>{r.runId}</option>
-                  ))}
-                </select>
-              </div>
-            </>
+          {run.config ? (
+            <ConfigTable config={run.config} />
           ) : (
-            <>
-              <button style={s.backBtn} onClick={() => setDiffRunId("")}>← Back to config</button>
-              <ConfigDiff runA={run} runB={diffRun} />
-            </>
+            <div style={s.muted}>No config.json found for this run.</div>
           )}
         </div>
       )}
@@ -116,24 +61,101 @@ export function RunDetail({ runId, experiments, allRuns, onForked }: RunDetailPr
       {tab === "metrics" && (
         <div style={s.tabContent}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <LossChart metrics={metrics} runId={runId} />
-            <LRChart metrics={metrics} runId={runId} />
-            <LossDecomposition metrics={metrics} runId={runId} />
+            <MetricLineChart
+              title="Loss Curves"
+              metrics={metrics}
+              logToggle
+              series={[
+                { key: "train_loss", label: "Train", color: "#ececec" },
+                { key: "val_loss", label: "Val", color: "#8e8ea0", dash: "4 2" },
+              ]}
+            />
+            <MetricLineChart
+              title="Accuracy"
+              metrics={metrics}
+              series={[
+                { key: "train_type_acc", label: "Train type", color: "#10a37f" },
+                { key: "val_type_acc", label: "Val type", color: "#10a37f", dash: "4 2" },
+                { key: "train_exist_acc", label: "Train exist", color: "#f5a623" },
+                { key: "val_exist_acc", label: "Val exist", color: "#f5a623", dash: "4 2" },
+              ]}
+            />
+            <MetricLineChart
+              title="Parameter quality"
+              metrics={metrics}
+              series={[
+                { key: "train_trans_mae", label: "Train trans MAE", color: "#10a37f" },
+                { key: "val_trans_mae", label: "Val trans MAE", color: "#10a37f", dash: "4 2" },
+                { key: "train_rot_err_deg", label: "Train rot°", color: "#ef4444" },
+                { key: "val_rot_err_deg", label: "Val rot°", color: "#ef4444", dash: "4 2" },
+              ]}
+            />
+            <MetricLineChart
+              title="Learning rate"
+              metrics={metrics}
+              logToggle
+              series={[{ key: "lr", label: "LR", color: "#10a37f" }]}
+            />
           </div>
         </div>
       )}
 
       {tab === "checkpoints" && (
         <div style={s.tabContent}>
-          <CheckpointList
-            checkpoints={checkpoints}
-            runId={runId}
-            experimentId={run.experiment_id}
-            experiments={experiments}
-            onForked={() => { refetchCheckpoints(); onForked(); }}
-          />
+          <CheckpointList checkpoints={checkpoints} runId={runId} />
         </div>
       )}
+
+      {tab === "slots" && (
+        <div style={s.tabContent}>
+          <SlotDiagnosticsTab runId={runId} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConfigRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div style={s.cfgRow}>
+      <span style={s.cfgLabel}>{label}</span>
+      <span style={s.cfgValue}>{value}</span>
+    </div>
+  );
+}
+
+function ConfigTable({ config }: { config: RunConfig }) {
+  return (
+    <div>
+      <ConfigRow label="experiment_id" value={config.experiment_id} />
+      <ConfigRow label="run_id" value={config.run_id} />
+      <ConfigRow label="learning_rate" value={config.learning_rate} />
+      <ConfigRow label="weight_decay" value={config.weight_decay} />
+      <ConfigRow label="batch_size" value={config.batch_size} />
+      <ConfigRow label="num_epochs" value={config.num_epochs} />
+      <ConfigRow label="lr_schedule" value={config.lr_schedule} />
+      <ConfigRow label="warmup_epochs" value={config.warmup_epochs} />
+      <ConfigRow label="tiers" value={config.tiers} />
+      <ConfigRow label="loss_weight_type" value={config.loss_weight_type} />
+      <ConfigRow label="loss_weight_params" value={config.loss_weight_params} />
+      <ConfigRow label="loss_weight_translation" value={config.loss_weight_translation} />
+      <ConfigRow label="loss_weight_rotation" value={config.loss_weight_rotation} />
+      <ConfigRow label="loss_weight_rounding" value={config.loss_weight_rounding} />
+      <ConfigRow label="no_object_weight" value={config.no_object_weight} />
+      <ConfigRow label="use_focal_loss" value={String(config.use_focal_loss)} />
+      <ConfigRow
+        label="git_commit"
+        value={
+          <>
+            <code style={s.code}>{config.git_commit ?? "—"}</code>
+            {config.git_dirty && <span style={s.dirty}>dirty</span>}
+          </>
+        }
+      />
+      <ConfigRow
+        label="created_at"
+        value={config.created_at ? new Date(config.created_at).toLocaleString() : "—"}
+      />
     </div>
   );
 }
@@ -141,14 +163,36 @@ export function RunDetail({ runId, experiments, allRuns, onForked }: RunDetailPr
 const s: Record<string, React.CSSProperties> = {
   root: { display: "flex", flexDirection: "column", gap: 0, height: "100%" },
   loading: { color: "#565869", fontSize: 13, padding: 16 },
-  summary: { padding: "0 0 14px 0", borderBottom: "1px solid #3f3f3f", marginBottom: 14 },
+  muted: { color: "#565869", fontSize: 13 },
+  summary: {
+    padding: "0 0 14px 0",
+    borderBottom: "1px solid #3f3f3f",
+    marginBottom: 14,
+  },
   runId: { fontSize: 15, fontWeight: 600, color: "#ececec", marginBottom: 6 },
   summaryRow: { display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" },
   meta: { fontSize: 12, color: "#8e8ea0" },
   tabs: { display: "flex", gap: 2, marginBottom: 14 },
-  tab: { padding: "6px 14px", fontSize: 13, background: "transparent", border: "none", borderRadius: 6, color: "#565869", cursor: "pointer" },
+  tab: {
+    padding: "6px 14px",
+    fontSize: 13,
+    background: "transparent",
+    border: "none",
+    borderRadius: 6,
+    color: "#565869",
+    cursor: "pointer",
+  },
   tabActive: { background: "#3f3f3f", color: "#ececec" },
   tabContent: { overflowY: "auto" },
-  select: { background: "#212121", border: "1px solid #3f3f3f", borderRadius: 6, color: "#ececec", padding: "4px 8px", fontSize: 12, outline: "none" },
-  backBtn: { background: "transparent", border: "none", color: "#8e8ea0", fontSize: 12, cursor: "pointer", padding: "0 0 12px 0", display: "block" },
+  cfgRow: {
+    display: "grid",
+    gridTemplateColumns: "220px 1fr",
+    gap: 8,
+    padding: "6px 0",
+    borderTop: "1px solid #3f3f3f",
+  },
+  cfgLabel: { fontSize: 12, color: "#8e8ea0", fontFamily: "ui-monospace, monospace" },
+  cfgValue: { fontSize: 13, color: "#ececec" },
+  code: { fontFamily: "ui-monospace, monospace", fontSize: 12 },
+  dirty: { marginLeft: 8, color: "#f5a623", fontSize: 11 },
 };

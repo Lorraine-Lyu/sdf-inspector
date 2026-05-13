@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { CurriculumEvent, StatusEvent, TrainingStatus } from "../api/types";
+import type { StatusEvent, TrainingStatus } from "../api/types";
 
 export function useTrainingStatus() {
   const [status, setStatus] = useState<TrainingStatus | null>(null);
@@ -20,35 +20,24 @@ export function useTrainingStatus() {
     void fetch();
   }, [fetch]);
 
+  /** Replace the whole status when a `status` event arrives — the websocket
+   *  rebroadcasts the full data/status.json contents. */
   const applyStatusEvent = useCallback((ev: StatusEvent) => {
-    setStatus((prev) =>
-      prev ? { ...prev, state: ev.state } : prev
-    );
+    const { type: _type, ...rest } = ev;
+    setStatus((prev) => ({ ...(prev ?? ({} as TrainingStatus)), ...rest }));
   }, []);
 
-  const applyCurriculumEvent = useCallback((ev: CurriculumEvent) => {
-    setStatus((prev) =>
-      prev ? { ...prev, curriculum_tier: ev.tier } : prev
-    );
+  /** Fold one row of metrics into the status fields the dashboard cares about. */
+  const applyMetricsUpdate = useCallback((update: Partial<TrainingStatus>) => {
+    setStatus((prev) => (prev ? { ...prev, ...update } : prev));
   }, []);
 
-  const applyMetricsUpdate = useCallback(
-    (epoch: number, loss: number, val_loss: number, lr: number) => {
-      setStatus((prev) =>
-        prev ? { ...prev, epoch, loss, val_loss, lr } : prev
-      );
-    },
-    []
-  );
-
-  const refetch = fetch;
-
-  return { status, error, refetch, applyStatusEvent, applyCurriculumEvent, applyMetricsUpdate };
+  return { status, error, refetch: fetch, applyStatusEvent, applyMetricsUpdate };
 }
 
 export type TrainingStatusHook = ReturnType<typeof useTrainingStatus>;
 
-// Poll interval fallback (used if WS unavailable)
+// Poll fallback (used when WS unavailable).
 export function useTrainingStatusPolled(intervalMs = 2000) {
   const hook = useTrainingStatus();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);

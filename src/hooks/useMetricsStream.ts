@@ -3,40 +3,46 @@ import { api } from "../api/client";
 import { WS_URL } from "../api/websocket";
 import type {
   AlertEvent,
-  CheckpointEvent,
+  DiagnosticEvent,
+  MetricsEvent,
   MetricsHistory,
-  SceneResultEvent,
   WsEvent,
 } from "../api/types";
+import { EMPTY_METRICS } from "../api/types";
 import type { TrainingStatusHook } from "./useTrainingStatus";
-
-const EMPTY_HISTORY: MetricsHistory = {
-  epochs: [],
-  train_loss: [],
-  val_loss: [],
-  lr: [],
-  component_losses: { sdf: [], eikonal: [], regularization: [] },
-  curriculum_tier: [],
-};
 
 interface UseMetricsStreamOptions {
   runId: string | null;
   onStatusEvent: TrainingStatusHook["applyStatusEvent"];
-  onCurriculumEvent: TrainingStatusHook["applyCurriculumEvent"];
   onMetricsUpdate: TrainingStatusHook["applyMetricsUpdate"];
-  onAlert: (ev: AlertEvent) => void;
+  onDiagnostic?: (ev: DiagnosticEvent) => void;
+  onAlert?: (ev: AlertEvent) => void;
+}
+
+/** Append every numeric field of a metrics event to the history.
+ *  - `epoch` lands in `epochs`; everything else is keyed by name.
+ *  - Strings (e.g. `exist_diag`) are dropped — only number columns are charted. */
+function appendMetricsEvent(prev: MetricsHistory, ev: MetricsEvent): MetricsHistory {
+  const next: MetricsHistory = { ...prev };
+  next.epochs = [...prev.epochs, ev.epoch];
+  for (const [key, value] of Object.entries(ev)) {
+    if (key === "type" || key === "epoch") continue;
+    if (typeof value !== "number") continue;
+    const column = (next[key] as number[] | undefined) ?? [];
+    next[key] = [...column, value];
+  }
+  return next;
 }
 
 export function useMetricsStream({
   runId,
   onStatusEvent,
-  onCurriculumEvent,
   onMetricsUpdate,
+  onDiagnostic,
   onAlert,
 }: UseMetricsStreamOptions) {
-  const [metrics, setMetrics] = useState<MetricsHistory>(EMPTY_HISTORY);
-  const [checkpoints, setCheckpoints] = useState<CheckpointEvent[]>([]);
-  const [recentScenes, setRecentScenes] = useState<SceneResultEvent[]>([]);
+  const [metrics, setMetrics] = useState<MetricsHistory>(EMPTY_METRICS);
+  const [latestDiagnosticEpoch, setLatestDiagnosticEpoch] = useState<number | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -44,17 +50,27 @@ export function useMetricsStream({
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unmountedRef = useRef(false);
 
-  // Load historical metrics when runId changes; clear derived state when idle
+  // Load historical metrics whenever the active run changes.
   useEffect(() => {
     if (!runId) {
-      setMetrics(EMPTY_HISTORY);
-      setCheckpoints([]);
-      setRecentScenes([]);
+      setMetrics(EMPTY_METRICS);
+      setLatestDiagnosticEpoch(null);
       return;
     }
-    api.getRunMetrics(runId).then(setMetrics).catch(() => {
-      setMetrics(EMPTY_HISTORY);
-    });
+    api
+      .getRunMetrics(runId)
+      .then((m) => setMetrics({ ...EMPTY_METRICS, ...m }))
+      .catch(() => setMetrics(EMPTY_METRICS));
+    api
+      .listSlotDiagnostics(runId)
+      .then((list) => {
+        if (list.length === 0) {
+          setLatestDiagnosticEpoch(null);
+        } else {
+          setLatestDiagnosticEpoch(list[list.length - 1].epoch);
+        }
+      })
+      .catch(() => setLatestDiagnosticEpoch(null));
   }, [runId]);
 
   const connect = useCallback(() => {
@@ -76,57 +92,41 @@ export function useMetricsStream({
       }
     };
 
-    ws.onerror = () => {
-      ws.close();
-    };
+    ws.onerror = () => ws.close();
 
-    ws.onmessage = (ev) => {
+    ws.onmessage = (raw) => {
       let event: WsEvent;
       try {
-        event = JSON.parse(ev.data as string) as WsEvent;
+        event = JSON.parse(raw.data as string) as WsEvent;
       } catch {
         return;
       }
 
       switch (event.type) {
         case "metrics": {
-          const e = event;
-          setMetrics((prev) => ({
-            epochs: [...prev.epochs, e.epoch],
-            train_loss: [...prev.train_loss, e.loss],
-            val_loss: [...prev.val_loss, e.val_loss],
-            lr: [...prev.lr, e.lr],
-            component_losses: {
-              sdf: [...prev.component_losses.sdf, e.component_losses.sdf],
-              eikonal: [...prev.component_losses.eikonal, e.component_losses.eikonal],
-              regularization: [
-                ...prev.component_losses.regularization,
-                e.component_losses.regularization,
-              ],
-            },
-            curriculum_tier: [...prev.curriculum_tier, 0], // tier updated via curriculum events
-          }));
-          onMetricsUpdate(e.epoch, e.loss, e.val_loss, e.lr);
+          setMetrics((prev) => appendMetricsEvent(prev, event));
+          const { epoch, train_loss, val_loss, lr } = event as MetricsEvent;
+          onMetricsUpdate({
+            epoch: typeof epoch === "number" ? epoch : null,
+            train_loss: typeof train_loss === "number" ? train_loss : null,
+            val_loss: typeof val_loss === "number" ? val_loss : null,
+            lr: typeof lr === "number" ? lr : null,
+          });
           break;
         }
-        case "checkpoint":
-          setCheckpoints((prev) => [...prev, event as CheckpointEvent]);
-          break;
-        case "scene_result":
-          setRecentScenes((prev) => [(event as SceneResultEvent), ...prev].slice(0, 10));
-          break;
         case "status":
           onStatusEvent(event);
           break;
-        case "curriculum":
-          onCurriculumEvent(event);
+        case "diagnostic":
+          setLatestDiagnosticEpoch(event.epoch);
+          onDiagnostic?.(event);
           break;
         case "alert":
-          onAlert(event as AlertEvent);
+          onAlert?.(event);
           break;
       }
     };
-  }, [onStatusEvent, onCurriculumEvent, onMetricsUpdate, onAlert]);
+  }, [onStatusEvent, onMetricsUpdate, onDiagnostic, onAlert]);
 
   useEffect(() => {
     unmountedRef.current = false;
@@ -138,5 +138,5 @@ export function useMetricsStream({
     };
   }, [connect]);
 
-  return { metrics, checkpoints, recentScenes, wsConnected };
+  return { metrics, latestDiagnosticEpoch, wsConnected };
 }

@@ -1,4 +1,19 @@
-import type { CheckpointMeta, Experiment, MetricsHistory, Reconstruction, RunConfig, RunDetail, RunReconstructionSummary, SceneDefinition, TrainingConfig, TrainingStatus } from "./types";
+import type {
+  CheckpointMeta,
+  Experiment,
+  GroundTruthGlsl,
+  InferencePrediction,
+  InferenceRequest,
+  MetricsHistory,
+  RunConfig,
+  RunDetail,
+  SceneListing,
+  SceneViewDetail,
+  SlotDiagnostic,
+  SlotDiagnosticListing,
+  TierListing,
+  TrainingStatus,
+} from "./types";
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000") + "/api/v1";
 
@@ -25,32 +40,13 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const api = {
+  // ── Training ──────────────────────────────────────────────────────────────
   getTrainingStatus: () => get<TrainingStatus>("/training/status"),
 
-  startTraining: (experiment_id: string, run_id?: string) =>
-    post<TrainingStatus>("/training/start", { experiment_id, run_id }),
-
-  pauseTraining: () => post<{ status: string; state: string; epoch: number }>("/training/pause"),
-
-  resumeTraining: () => post<{ status: string; state: string; epoch: number }>("/training/resume"),
-
-  stopTraining: () => post<{ status: string; state: string; epoch: number }>("/training/stop"),
-
-  updateConfig: (config: Partial<TrainingConfig>) =>
-    post<TrainingConfig>("/training/config", config),
-
-  advanceCurriculum: (action: "advance" | "hold" | "auto") =>
-    post("/training/curriculum", { action }),
-
+  // ── Experiments / runs ────────────────────────────────────────────────────
   listExperiments: () => get<Experiment[]>("/experiments"),
 
-  createExperiment: (body: { name: string; description?: string; config?: object }) =>
-    post<Experiment>("/experiments", body),
-
   listRuns: (experimentId: string) => get<RunConfig[]>(`/experiments/${experimentId}/runs`),
-
-  createRun: (experimentId: string, forkFromCheckpoint?: string) =>
-    post<RunConfig>(`/experiments/${experimentId}/runs`, { fork_from_checkpoint: forkFromCheckpoint ?? null }),
 
   getRun: (runId: string) => get<RunDetail>(`/runs/${runId}`),
 
@@ -64,17 +60,25 @@ export const api = {
 
   listCheckpoints: (runId: string) => get<CheckpointMeta[]>(`/runs/${runId}/checkpoints`),
 
-  getRunReconstructions: (runId: string) =>
-    get<RunReconstructionSummary[]>(`/runs/${runId}/reconstructions`),
+  // ── Slot diagnostics ──────────────────────────────────────────────────────
+  listSlotDiagnostics: (runId: string) =>
+    get<SlotDiagnosticListing[]>(`/runs/${runId}/diagnostics/slots`),
 
-  evaluate: (sceneIds: string[], checkpointId: string) =>
-    post<{ status: string; scene_count: number }>("/scenes/evaluate", { scene_ids: sceneIds, checkpoint_id: checkpointId }),
+  getSlotDiagnostic: (runId: string, epoch: number) =>
+    get<SlotDiagnostic>(`/runs/${runId}/diagnostics/slots/${epoch}`),
 
-  getScene: (sceneId: string) => get<SceneDefinition>(`/scenes/${sceneId}`),
+  // ── Scene views ───────────────────────────────────────────────────────────
+  listTiers: () => get<TierListing>("/scene_views/"),
 
-  getReconstruction: (sceneId: string, runId: string, checkpointId?: string) => {
-    const params = new URLSearchParams({ run_id: runId });
-    if (checkpointId) params.set("checkpoint_id", checkpointId);
-    return get<Reconstruction>(`/scenes/${sceneId}/reconstruction?${params}`);
-  },
+  listScenesInTier: (tier: string) => get<SceneListing>(`/scene_views/${tier}`),
+
+  getSceneViewDetail: (tier: string, scene: string) =>
+    get<SceneViewDetail>(`/scene_views/${tier}/${scene}`),
+
+  getGroundTruthGlsl: (tier: string, scene: string) =>
+    get<GroundTruthGlsl>(`/scene_views/${tier}/${scene}/ground_truth`),
+
+  // ── Inference ─────────────────────────────────────────────────────────────
+  runInference: (request: InferenceRequest) =>
+    post<InferencePrediction>("/inference", request),
 };

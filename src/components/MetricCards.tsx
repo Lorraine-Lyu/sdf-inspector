@@ -1,14 +1,8 @@
 import React from "react";
 import type { TrainingStatus } from "../api/types";
 
-const TIER_LABELS: Record<number, string> = {
-  0: "Tier 0 — Simple",
-  1: "Tier 1 — Transformed",
-  2: "Tier 2 — Combined",
-};
-
 function formatEta(seconds: number | null): string {
-  if (seconds === null) return "—";
+  if (seconds === null || !isFinite(seconds)) return "—";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
@@ -17,20 +11,11 @@ function formatEta(seconds: number | null): string {
   return `${s}s`;
 }
 
-function formatRelativeTime(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  return `${Math.floor(diff / 3600)}h ago`;
-}
-
-function stateColor(state: TrainingStatus["state"]): string {
-  switch (state) {
-    case "training": return "#10a37f";
-    case "paused":   return "#f5a623";
-    case "error":    return "#ef4444";
-    default:         return "#565869";
-  }
+function formatElapsed(seconds: number | null): string {
+  if (seconds === null) return "—";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 interface CardProps {
@@ -50,101 +35,74 @@ function Card({ label, value, valueColor }: CardProps) {
 
 interface MetricCardsProps {
   status: TrainingStatus | null;
+  /** Most recent epoch's row from metrics.jsonl (used for accuracy / quality cards). */
+  lastMetrics?: Record<string, number | null | undefined>;
 }
 
-export function MetricCards({ status }: MetricCardsProps) {
+export function MetricCards({ status, lastMetrics }: MetricCardsProps) {
   if (!status) {
     return <div style={styles.row}><div style={styles.placeholder}>Loading…</div></div>;
   }
 
-  const workerWarning =
-    !status.worker_connected &&
-    status.state !== "idle" &&
-    status.state !== "stopped";
+  const m = lastMetrics ?? {};
+  const num = (v: unknown): number | null =>
+    typeof v === "number" && isFinite(v) ? v : null;
+
+  const typeAcc = num(m.val_type_acc) ?? num(m.train_type_acc);
+  const existAcc = num(m.val_exist_acc) ?? num(m.train_exist_acc);
+  const transMae = num(m.val_trans_mae) ?? num(m.train_trans_mae);
+  const rotErr = num(m.val_rot_err_deg) ?? num(m.train_rot_err_deg);
 
   return (
-    <div>
-      {workerWarning && (
-        <div style={styles.workerWarning}>
-          Worker disconnected — live updates unavailable
-        </div>
-      )}
+    <div style={styles.stack}>
       <div style={styles.row}>
-        <Card
-          label="Epoch"
-          value={status.epoch !== null ? status.epoch : "—"}
-          valueColor={status.epoch !== null ? undefined : "#565869"}
-        />
+        <Card label="Epoch" value={status.epoch ?? "—"} />
         <Card
           label="Train Loss"
-          value={status.loss !== null ? status.loss.toFixed(4) : "—"}
-          valueColor={status.loss !== null ? undefined : "#565869"}
+          value={status.train_loss !== null ? status.train_loss.toFixed(4) : "—"}
         />
         <Card
           label="Val Loss"
           value={status.val_loss !== null ? status.val_loss.toFixed(4) : "—"}
-          valueColor={status.val_loss !== null ? undefined : "#565869"}
         />
         <Card
           label="Learning Rate"
           value={status.lr !== null ? status.lr.toExponential(2) : "—"}
-          valueColor={status.lr !== null ? undefined : "#565869"}
+        />
+      </div>
+      <div style={styles.row}>
+        <Card
+          label="Type Acc"
+          value={typeAcc !== null ? `${(typeAcc * 100).toFixed(0)}%` : "—"}
         />
         <Card
-          label="ETA"
-          value={formatEta(status.eta_seconds)}
-          valueColor={status.eta_seconds !== null ? undefined : "#565869"}
+          label="Exist Acc"
+          value={existAcc !== null ? `${(existAcc * 100).toFixed(0)}%` : "—"}
         />
         <Card
-          label="Tier"
-          value={
-            status.curriculum_tier !== null
-              ? TIER_LABELS[status.curriculum_tier] ?? `Tier ${status.curriculum_tier}`
-              : "—"
-          }
-          valueColor={status.curriculum_tier !== null ? "#ececec" : "#565869"}
+          label="Trans MAE"
+          value={transMae !== null ? transMae.toFixed(3) : "—"}
         />
         <Card
-          label="State"
-          value={
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                color: stateColor(status.state),
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: stateColor(status.state),
-                  boxShadow: status.state === "training" ? "0 0 6px #10a37f88" : "none",
-                  display: "inline-block",
-                  flexShrink: 0,
-                }}
-              />
-              {status.state}
-            </span>
-          }
+          label="Rot Err"
+          value={rotErr !== null ? `${rotErr.toFixed(1)}°` : "—"}
         />
-        {status.last_backup && (
-          <Card
-            label="Backup"
-            value={`Epoch ${status.last_backup.epoch} · ${formatRelativeTime(status.last_backup.timestamp)}`}
-            valueColor={status.last_backup.success ? "#10a37f" : "#ef4444"}
-          />
-        )}
+      </div>
+      <div style={styles.row}>
+        <Card label="Tier" value={status.max_tier ?? "—"} />
+        <Card label="Elapsed" value={formatElapsed(status.wall_time_seconds)} />
+        <Card label="ETA" value={formatEta(status.eta_seconds)} />
       </div>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  stack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
   row: {
     display: "flex",
     flexWrap: "wrap",
@@ -172,14 +130,5 @@ const styles: Record<string, React.CSSProperties> = {
   placeholder: {
     color: "#565869",
     fontSize: 14,
-  },
-  workerWarning: {
-    background: "#2f2f2f",
-    borderLeft: "3px solid #f5a623",
-    borderRadius: 6,
-    color: "#f5a623",
-    padding: "8px 14px",
-    fontSize: 13,
-    marginBottom: 12,
   },
 };

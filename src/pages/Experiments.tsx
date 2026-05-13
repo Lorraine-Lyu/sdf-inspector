@@ -1,112 +1,74 @@
-import React, { useMemo, useState } from "react";
-import { CreateExperimentDialog } from "../components/CreateExperimentDialog";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ExperimentList } from "../components/ExperimentList";
-import { RunComparison } from "../components/RunComparison";
 import { RunDetail } from "../components/RunDetail";
 import { useExperiments } from "../hooks/useExperiments";
-import { useRuns } from "../hooks/useRuns";
+
+type Tab = "config" | "metrics" | "checkpoints" | "slots";
+const TABS: Tab[] = ["config", "metrics", "checkpoints", "slots"];
 
 export function Experiments() {
-  const { experiments, refetch } = useExperiments();
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const [selectedExpId, setSelectedExpId] = useState<string | null>(null);
-  const [compareRunIds, setCompareRunIds] = useState<string[]>([]);
-  const [comparing, setComparing] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-
-  const { runs: selectedExpRuns, refetch: refetchRuns } = useRuns(selectedExpId);
-
-  const allRuns = useMemo(() =>
-    experiments.flatMap((exp) =>
-      // We only have run lists for expanded experiments; build from what we have
-      selectedExpId === exp.id
-        ? selectedExpRuns.map((r) => ({ runId: r.run_id, experimentId: exp.id }))
-        : []
-    ),
-    [experiments, selectedExpId, selectedExpRuns]
+  const { experiments } = useExperiments();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(
+    searchParams.get("run")
   );
+  const initialTab = (searchParams.get("tab") as Tab | null) ?? "config";
+  const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "config");
 
-  const handleSelectRun = (runId: string, experimentId: string) => {
-    setSelectedRunId(runId);
-    setSelectedExpId(experimentId);
-    setComparing(false);
-  };
-
-  const handleToggleCompare = (runId: string) => {
-    setCompareRunIds((prev) => {
-      if (prev.includes(runId)) return prev.filter((id) => id !== runId);
-      if (prev.length >= 4) return prev;
-      return [...prev, runId];
-    });
-  };
-
-  const handleForked = () => {
-    refetch();
-    refetchRuns();
-  };
+  // Keep URL search params in sync with selection so the dashboard's
+  // "View →" deep link can target a specific run + tab.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedRunId) next.set("run", selectedRunId);
+    else next.delete("run");
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRunId, tab]);
 
   return (
     <div style={s.page}>
-      {/* Left panel */}
       <div style={s.left}>
-        <div style={s.leftHeader}>
-          <span style={s.sectionLabel}>Experiments</span>
-        </div>
-        <div style={s.listScroll}>
+        <div style={s.sectionLabel}>Experiments</div>
+        <div style={s.scroll}>
           <ExperimentList
             experiments={experiments}
             selectedRunId={selectedRunId}
-            selectedRunIds={compareRunIds}
-            onSelectRun={handleSelectRun}
-            onToggleCompare={handleToggleCompare}
-            onRefetch={refetch}
+            onSelectRun={(runId) => setSelectedRunId(runId)}
           />
-        </div>
-        <div style={s.leftFooter}>
-          <button style={s.newBtn} onClick={() => setShowCreate(true)}>+ New Experiment</button>
-          {compareRunIds.length >= 2 && (
-            <button style={s.compareBtn} onClick={() => setComparing(true)}>
-              Compare {compareRunIds.length} runs
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Right panel */}
       <div style={s.right}>
-        {comparing && compareRunIds.length >= 2 ? (
-          <RunComparison runIds={compareRunIds} onClose={() => setComparing(false)} />
-        ) : selectedRunId ? (
-          <RunDetail
-            runId={selectedRunId}
-            experiments={experiments}
-            allRuns={allRuns}
-            onForked={handleForked}
-          />
+        {selectedRunId ? (
+          <RunDetail runId={selectedRunId} tab={tab} onTabChange={setTab} />
         ) : (
           <div style={s.empty}>Select a run from the list</div>
         )}
       </div>
-
-      {showCreate && (
-        <CreateExperimentDialog
-          onClose={() => setShowCreate(false)}
-          onCreated={refetch}
-        />
-      )}
     </div>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
   page: { display: "flex", gap: 0, height: "100%", minHeight: "calc(100vh - 56px)" },
-  left: { width: 280, minWidth: 280, borderRight: "1px solid #3f3f3f", display: "flex", flexDirection: "column", paddingRight: 0 },
-  leftHeader: { padding: "0 0 12px 0" },
-  sectionLabel: { fontSize: 11, color: "#565869", textTransform: "uppercase", letterSpacing: "0.06em" },
-  listScroll: { flex: 1, overflowY: "auto" },
-  leftFooter: { paddingTop: 14, borderTop: "1px solid #3f3f3f", display: "flex", flexDirection: "column", gap: 8 },
-  newBtn: { background: "transparent", border: "1px solid #3f3f3f", borderRadius: 7, color: "#8e8ea0", padding: "7px 14px", fontSize: 13, cursor: "pointer", textAlign: "left" },
-  compareBtn: { background: "#10a37f", border: "none", borderRadius: 7, color: "#fff", padding: "7px 14px", fontSize: 13, cursor: "pointer", fontWeight: 500 },
+  left: {
+    width: 280,
+    minWidth: 280,
+    borderRight: "1px solid #3f3f3f",
+    display: "flex",
+    flexDirection: "column",
+    paddingRight: 0,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    color: "#565869",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    paddingBottom: 12,
+  },
+  scroll: { flex: 1, overflowY: "auto" },
   right: { flex: 1, paddingLeft: 24, overflowY: "auto" },
   empty: { color: "#565869", fontSize: 13, paddingTop: 24 },
 };
