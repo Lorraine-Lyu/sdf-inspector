@@ -1,7 +1,7 @@
 import React from "react";
 import type { RunConfig } from "../api/types";
 import { CheckpointList } from "./CheckpointList";
-import { MetricLineChart } from "./MetricLineChart";
+import { MetricChartGrid } from "./MetricChartGrid";
 import { SlotDiagnosticsTab } from "./experiments/SlotDiagnosticsTab";
 import { useCheckpoints } from "../hooks/useCheckpoints";
 import { useRunDetail } from "../hooks/useRunDetail";
@@ -60,43 +60,7 @@ export function RunDetail({ runId, tab, onTabChange }: RunDetailProps) {
 
       {tab === "metrics" && (
         <div style={s.tabContent}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <MetricLineChart
-              title="Loss Curves"
-              metrics={metrics}
-              logToggle
-              series={[
-                { key: "train_loss", label: "Train", color: "#ececec" },
-                { key: "val_loss", label: "Val", color: "#8e8ea0", dash: "4 2" },
-              ]}
-            />
-            <MetricLineChart
-              title="Accuracy"
-              metrics={metrics}
-              series={[
-                { key: "train_type_acc", label: "Train type", color: "#10a37f" },
-                { key: "val_type_acc", label: "Val type", color: "#10a37f", dash: "4 2" },
-                { key: "train_exist_acc", label: "Train exist", color: "#f5a623" },
-                { key: "val_exist_acc", label: "Val exist", color: "#f5a623", dash: "4 2" },
-              ]}
-            />
-            <MetricLineChart
-              title="Parameter quality"
-              metrics={metrics}
-              series={[
-                { key: "train_trans_mae", label: "Train trans MAE", color: "#10a37f" },
-                { key: "val_trans_mae", label: "Val trans MAE", color: "#10a37f", dash: "4 2" },
-                { key: "train_rot_err_deg", label: "Train rot°", color: "#ef4444" },
-                { key: "val_rot_err_deg", label: "Val rot°", color: "#ef4444", dash: "4 2" },
-              ]}
-            />
-            <MetricLineChart
-              title="Learning rate"
-              metrics={metrics}
-              logToggle
-              series={[{ key: "lr", label: "LR", color: "#10a37f" }]}
-            />
-          </div>
+          <MetricChartGrid metrics={metrics} isLive={false} />
         </div>
       )}
 
