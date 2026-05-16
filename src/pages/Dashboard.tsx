@@ -52,17 +52,22 @@ export function Dashboard({ status, metrics, latestDiagnosticEpoch }: DashboardP
         <TrainingStatusBadge status={status} />
       </div>
 
-      <MetricCards status={status} lastMetrics={last} />
+      <div className="dashboard-layout">
+        <div className="dashboard-overview">
+          <MetricCards status={status} lastMetrics={last} />
+          {runId && diagnostic && (
+            <SlotDiagnosticsSummary
+              runId={runId}
+              diagnostic={diagnostic}
+              loading={diagnosticLoading}
+            />
+          )}
+        </div>
 
-      {runId && diagnostic && (
-        <SlotDiagnosticsSummary
-          runId={runId}
-          diagnostic={diagnostic}
-          loading={diagnosticLoading}
-        />
-      )}
-
-      <MetricChartGrid metrics={metrics} isLive={true} />
+        <div className="dashboard-charts">
+          <MetricChartGrid metrics={metrics} isLive={true} />
+        </div>
+      </div>
     </div>
   );
 }

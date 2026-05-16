@@ -201,7 +201,7 @@ export function MetricChartGrid({ metrics }: MetricChartGridProps) {
 const styles: Record<string, React.CSSProperties> = {
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))",
     gap: 16,
     width: "100%",
   },
