@@ -1,5 +1,6 @@
 import React from "react";
 import { SDFViewer } from "../SDFViewer";
+import { GroundTruthPanel } from "./GroundTruthPanel";
 import { useGroundTruthGlsl } from "../../hooks/useGroundTruthGlsl";
 import { useSceneViewDetail } from "../../hooks/useSceneViewDetail";
 
@@ -22,37 +23,43 @@ export function SceneViewDetail({ tier, scene }: SceneViewDetailProps) {
   if (!detail) return null;
 
   return (
-    <div style={s.root}>
-      <div style={s.header}>
-        <span style={s.title}>{detail.tier} / {detail.scene}</span>
-        <span style={s.muted}>{detail.view_count} views</span>
+    <div className="scene-detail-layout">
+      <div className="scene-content" style={s.root}>
+        <div style={s.header}>
+          <span style={s.title}>{detail.tier} / {detail.scene}</span>
+          <span style={s.muted}>{detail.view_count} views</span>
+        </div>
+
+        <div style={s.imageGrid}>
+          {detail.views.map((v) => {
+            const fullUrl = v.image_url.startsWith("http")
+              ? v.image_url
+              : `${API_ORIGIN}${v.image_url}`;
+            return (
+              <div key={v.index} style={s.imageCell}>
+                <img src={fullUrl} alt={`view ${v.index}`} style={s.image} />
+                <span style={s.imageLabel}>v_{String(v.index).padStart(2, "0")}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={s.section}>
+          <span style={s.sectionLabel}>Ground Truth</span>
+          {glslLoading ? (
+            <div style={s.muted}>Compiling GLSL…</div>
+          ) : glslError ? (
+            <div style={s.error}>{glslError}</div>
+          ) : glsl ? (
+            <SDFViewer expression={glsl} width={440} height={380} />
+          ) : (
+            <div style={s.muted}>No ground truth available</div>
+          )}
+        </div>
       </div>
 
-      <div style={s.imageGrid}>
-        {detail.views.map((v) => {
-          const fullUrl = v.image_url.startsWith("http")
-            ? v.image_url
-            : `${API_ORIGIN}${v.image_url}`;
-          return (
-            <div key={v.index} style={s.imageCell}>
-              <img src={fullUrl} alt={`view ${v.index}`} style={s.image} />
-              <span style={s.imageLabel}>v_{String(v.index).padStart(2, "0")}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={s.section}>
-        <span style={s.sectionLabel}>Ground Truth</span>
-        {glslLoading ? (
-          <div style={s.muted}>Compiling GLSL…</div>
-        ) : glslError ? (
-          <div style={s.error}>{glslError}</div>
-        ) : glsl ? (
-          <SDFViewer expression={glsl} width={440} height={380} />
-        ) : (
-          <div style={s.muted}>No ground truth available</div>
-        )}
+      <div className="ground-truth-panel">
+        <GroundTruthPanel groundTruth={detail.ground_truth} />
       </div>
     </div>
   );

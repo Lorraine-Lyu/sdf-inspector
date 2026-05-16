@@ -36,3 +36,27 @@ input, select {
   from { transform: translateX(16px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
+
+.scene-detail-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.scene-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ground-truth-panel {
+  width: 360px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .scene-detail-layout {
+    flex-direction: column;
+  }
+  .ground-truth-panel {
+    width: 100%;
+  }
+}
