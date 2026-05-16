@@ -10,7 +10,7 @@ import { api } from "../api/client";
 export function useRunReview(
   runId: string | null,
   enabled: boolean,
-  experimentId: string | null = null
+  experimentId: string | null
 ) {
   const [content, setContent] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -18,7 +18,7 @@ export function useRunReview(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!runId || !enabled) return;
+    if (!runId || !enabled || !experimentId) return;
     let cancelled = false;
     setLoading(true);
     setError(null);

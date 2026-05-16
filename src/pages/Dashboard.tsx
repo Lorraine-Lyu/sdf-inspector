@@ -27,21 +27,22 @@ function lastRow(metrics: MetricsHistory): Record<string, number> {
 
 export function Dashboard({ status, metrics, latestDiagnosticEpoch }: DashboardProps) {
   const runId = status?.run_id ?? null;
+  const experimentId = status?.experiment_id ?? null;
   const [diagnostic, setDiagnostic] = useState<SlotDiagnostic | null>(null);
   const [diagnosticLoading, setDiagnosticLoading] = useState(false);
 
   useEffect(() => {
-    if (!runId || latestDiagnosticEpoch === null) {
+    if (!runId || !experimentId || latestDiagnosticEpoch === null) {
       setDiagnostic(null);
       return;
     }
     setDiagnosticLoading(true);
     api
-      .getSlotDiagnostic(runId, latestDiagnosticEpoch)
+      .getSlotDiagnostic(runId, latestDiagnosticEpoch, experimentId)
       .then(setDiagnostic)
       .catch(() => setDiagnostic(null))
       .finally(() => setDiagnosticLoading(false));
-  }, [runId, latestDiagnosticEpoch]);
+  }, [runId, experimentId, latestDiagnosticEpoch]);
 
   const last = lastRow(metrics);
 

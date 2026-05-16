@@ -5,11 +5,11 @@ import { useRunReview } from "../hooks/useRunReview";
 
 interface ReviewTabProps {
   runId: string;
-  experimentId?: string | null;
+  experimentId: string | null;
   active: boolean;
 }
 
-export function ReviewTab({ runId, experimentId = null, active }: ReviewTabProps) {
+export function ReviewTab({ runId, experimentId, active }: ReviewTabProps) {
   const { content, loaded, loading, error } = useRunReview(runId, active, experimentId);
 
   if (loading && !loaded) return <div style={s.muted}>Loading review…</div>;

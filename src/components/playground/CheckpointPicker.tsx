@@ -82,8 +82,8 @@ function RunBlock({
 
   useEffect(() => {
     if (!expanded) return;
-    api.listCheckpoints(run.run_id).then(setCheckpoints).catch(() => {});
-  }, [expanded, run.run_id]);
+    api.listCheckpoints(run.run_id, experimentId).then(setCheckpoints).catch(() => {});
+  }, [expanded, run.run_id, experimentId]);
 
   return (
     <div style={{ ...s.block, paddingLeft: 18 }}>

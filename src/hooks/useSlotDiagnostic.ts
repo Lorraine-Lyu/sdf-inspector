@@ -5,14 +5,14 @@ import type { SlotDiagnostic } from "../api/types";
 export function useSlotDiagnostic(
   runId: string | null,
   epoch: number | null,
-  experimentId: string | null = null
+  experimentId: string | null
 ) {
   const [data, setData] = useState<SlotDiagnostic | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!runId || epoch === null) {
+    if (!runId || epoch === null || !experimentId) {
       setData(null);
       return;
     }

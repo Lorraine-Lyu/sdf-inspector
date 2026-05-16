@@ -13,6 +13,7 @@ import type { TrainingStatusHook } from "./useTrainingStatus";
 
 interface UseMetricsStreamOptions {
   runId: string | null;
+  experimentId: string | null;
   onStatusEvent: TrainingStatusHook["applyStatusEvent"];
   onMetricsUpdate: TrainingStatusHook["applyMetricsUpdate"];
   onDiagnostic?: (ev: DiagnosticEvent) => void;
@@ -36,6 +37,7 @@ function appendMetricsEvent(prev: MetricsHistory, ev: MetricsEvent): MetricsHist
 
 export function useMetricsStream({
   runId,
+  experimentId,
   onStatusEvent,
   onMetricsUpdate,
   onDiagnostic,
@@ -52,17 +54,17 @@ export function useMetricsStream({
 
   // Load historical metrics whenever the active run changes.
   useEffect(() => {
-    if (!runId) {
+    if (!runId || !experimentId) {
       setMetrics(EMPTY_METRICS);
       setLatestDiagnosticEpoch(null);
       return;
     }
     api
-      .getRunMetrics(runId)
+      .getRunMetrics(runId, experimentId)
       .then((m) => setMetrics({ ...EMPTY_METRICS, ...m }))
       .catch(() => setMetrics(EMPTY_METRICS));
     api
-      .listSlotDiagnostics(runId)
+      .listSlotDiagnostics(runId, experimentId)
       .then((list) => {
         if (list.length === 0) {
           setLatestDiagnosticEpoch(null);
@@ -71,7 +73,7 @@ export function useMetricsStream({
         }
       })
       .catch(() => setLatestDiagnosticEpoch(null));
-  }, [runId]);
+  }, [runId, experimentId]);
 
   const connect = useCallback(() => {
     if (unmountedRef.current) return;

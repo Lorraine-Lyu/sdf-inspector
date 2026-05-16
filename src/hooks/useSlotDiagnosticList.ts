@@ -4,14 +4,14 @@ import type { SlotDiagnosticListing } from "../api/types";
 
 export function useSlotDiagnosticList(
   runId: string | null,
-  experimentId: string | null = null
+  experimentId: string | null
 ) {
   const [list, setList] = useState<SlotDiagnosticListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!runId) {
+    if (!runId || !experimentId) {
       setList([]);
       return;
     }

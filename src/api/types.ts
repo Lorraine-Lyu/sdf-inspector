@@ -265,7 +265,7 @@ export interface SlotDiagnosticListing {
 
 export interface InferenceRequest {
   run_id: string;
-  experiment_id?: string;
+  experiment_id: string;
   checkpoint_id: string;
   scene_path: string;
   view_indices?: number[];

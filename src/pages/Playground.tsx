@@ -49,9 +49,7 @@ export function Playground() {
     if (!checkpoint || !scene) return;
     void predict({
       run_id: checkpoint.runId,
-      ...(checkpoint.experimentId
-        ? { experiment_id: checkpoint.experimentId }
-        : {}),
+      experiment_id: checkpoint.experimentId,
       checkpoint_id: checkpoint.checkpointId,
       scene_path: `${scene.tier}/${scene.scene}`,
       view_indices: selectedViews,

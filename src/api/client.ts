@@ -42,9 +42,9 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 }
 
 /** Build a `?experiment_id=…` suffix. Run names are only unique within an
- *  experiment, so the server needs this to resolve the right run. */
-function expQuery(experimentId?: string | null): string {
-  return experimentId ? `?experiment_id=${encodeURIComponent(experimentId)}` : "";
+ *  experiment, so the server requires this to resolve the right run. */
+function expQuery(experimentId: string): string {
+  return `?experiment_id=${encodeURIComponent(experimentId)}`;
 }
 
 export const api = {
@@ -56,36 +56,35 @@ export const api = {
 
   listRuns: (experimentId: string) => get<RunConfig[]>(`/experiments/${experimentId}/runs`),
 
-  getRun: (runId: string, experimentId?: string | null) =>
+  getRun: (runId: string, experimentId: string) =>
     get<RunDetail>(`/runs/${runId}${expQuery(experimentId)}`),
 
-  getRunReview: (runId: string, experimentId?: string | null) =>
+  getRunReview: (runId: string, experimentId: string) =>
     get<RunReview>(`/runs/${runId}/review${expQuery(experimentId)}`),
 
   getRunMetrics: (
     runId: string,
+    experimentId: string,
     startEpoch?: number,
-    endEpoch?: number,
-    experimentId?: string | null
+    endEpoch?: number
   ) => {
     const params = new URLSearchParams();
+    params.set("experiment_id", experimentId);
     if (startEpoch !== undefined) params.set("start_epoch", String(startEpoch));
     if (endEpoch !== undefined) params.set("end_epoch", String(endEpoch));
-    if (experimentId) params.set("experiment_id", experimentId);
-    const qs = params.toString();
-    return get<MetricsHistory>(`/runs/${runId}/metrics${qs ? `?${qs}` : ""}`);
+    return get<MetricsHistory>(`/runs/${runId}/metrics?${params.toString()}`);
   },
 
-  listCheckpoints: (runId: string, experimentId?: string | null) =>
+  listCheckpoints: (runId: string, experimentId: string) =>
     get<CheckpointMeta[]>(`/runs/${runId}/checkpoints${expQuery(experimentId)}`),
 
   // ── Slot diagnostics ──────────────────────────────────────────────────────
-  listSlotDiagnostics: (runId: string, experimentId?: string | null) =>
+  listSlotDiagnostics: (runId: string, experimentId: string) =>
     get<SlotDiagnosticListing[]>(
       `/runs/${runId}/diagnostics/slots${expQuery(experimentId)}`
     ),
 
-  getSlotDiagnostic: (runId: string, epoch: number, experimentId?: string | null) =>
+  getSlotDiagnostic: (runId: string, epoch: number, experimentId: string) =>
     get<SlotDiagnostic>(
       `/runs/${runId}/diagnostics/slots/${epoch}${expQuery(experimentId)}`
     ),

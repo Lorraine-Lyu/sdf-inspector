@@ -35,6 +35,7 @@ function AppInner() {
 
   const { metrics, latestDiagnosticEpoch, wsConnected } = useMetricsStream({
     runId: status?.run_id ?? null,
+    experimentId: status?.experiment_id ?? null,
     onStatusEvent: handleStatusEvent,
     onMetricsUpdate: applyMetricsUpdate,
     onAlert: handleAlert,

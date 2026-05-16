@@ -5,10 +5,10 @@ import { Link } from "react-router-dom";
 interface CheckpointListProps {
   checkpoints: CheckpointMeta[];
   runId: string;
-  experimentId?: string | null;
+  experimentId: string | null;
 }
 
-export function CheckpointList({ checkpoints, runId, experimentId = null }: CheckpointListProps) {
+export function CheckpointList({ checkpoints, runId, experimentId }: CheckpointListProps) {
   if (checkpoints.length === 0) {
     return <div style={s.empty}>No checkpoints yet</div>;
   }

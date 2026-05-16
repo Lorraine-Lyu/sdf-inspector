@@ -13,12 +13,12 @@ const TABS: RunTab[] = ["config", "metrics", "checkpoints", "slots", "review"];
 
 interface RunDetailProps {
   runId: string;
-  experimentId?: string | null;
+  experimentId: string | null;
   tab: RunTab;
   onTabChange: (tab: RunTab) => void;
 }
 
-export function RunDetail({ runId, experimentId = null, tab, onTabChange }: RunDetailProps) {
+export function RunDetail({ runId, experimentId, tab, onTabChange }: RunDetailProps) {
   const { run, loading } = useRunDetail(runId, experimentId);
   const { metrics } = useRunMetrics(runId, experimentId);
   const { checkpoints } = useCheckpoints(runId, experimentId);

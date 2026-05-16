@@ -4,14 +4,14 @@ import type { CheckpointMeta } from "../api/types";
 
 export function useCheckpoints(
   runId: string | null,
-  experimentId: string | null = null
+  experimentId: string | null
 ) {
   const [checkpoints, setCheckpoints] = useState<CheckpointMeta[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(() => {
-    if (!runId) { setCheckpoints([]); return; }
+    if (!runId || !experimentId) { setCheckpoints([]); return; }
     setLoading(true);
     api.listCheckpoints(runId, experimentId)
       .then((c) => { setCheckpoints(c); setError(null); })

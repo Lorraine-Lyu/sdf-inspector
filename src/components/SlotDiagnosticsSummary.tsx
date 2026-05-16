@@ -4,14 +4,14 @@ import type { SlotDiagnostic } from "../api/types";
 
 interface SlotDiagnosticsSummaryProps {
   runId: string | null;
-  experimentId?: string | null;
+  experimentId: string | null;
   diagnostic: SlotDiagnostic | null;
   loading: boolean;
 }
 
 export function SlotDiagnosticsSummary({
   runId,
-  experimentId = null,
+  experimentId,
   diagnostic,
   loading,
 }: SlotDiagnosticsSummaryProps) {
