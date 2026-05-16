@@ -2,13 +2,14 @@ import React from "react";
 import type { RunConfig } from "../api/types";
 import { CheckpointList } from "./CheckpointList";
 import { MetricChartGrid } from "./MetricChartGrid";
+import { ReviewTab } from "./ReviewTab";
 import { SlotDiagnosticsTab } from "./experiments/SlotDiagnosticsTab";
 import { useCheckpoints } from "../hooks/useCheckpoints";
 import { useRunDetail } from "../hooks/useRunDetail";
 import { useRunMetrics } from "../hooks/useRunMetrics";
 
-export type RunTab = "config" | "metrics" | "checkpoints" | "slots";
-const TABS: RunTab[] = ["config", "metrics", "checkpoints", "slots"];
+export type RunTab = "config" | "metrics" | "checkpoints" | "slots" | "review";
+const TABS: RunTab[] = ["config", "metrics", "checkpoints", "slots", "review"];
 
 interface RunDetailProps {
   runId: string;
@@ -73,6 +74,12 @@ export function RunDetail({ runId, tab, onTabChange }: RunDetailProps) {
       {tab === "slots" && (
         <div style={s.tabContent}>
           <SlotDiagnosticsTab runId={runId} />
+        </div>
+      )}
+
+      {tab === "review" && (
+        <div style={s.tabContent}>
+          <ReviewTab runId={runId} active={tab === "review"} />
         </div>
       )}
     </div>

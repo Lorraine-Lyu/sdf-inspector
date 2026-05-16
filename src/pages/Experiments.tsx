@@ -4,8 +4,8 @@ import { ExperimentList } from "../components/ExperimentList";
 import { RunDetail } from "../components/RunDetail";
 import { useExperiments } from "../hooks/useExperiments";
 
-type Tab = "config" | "metrics" | "checkpoints" | "slots";
-const TABS: Tab[] = ["config", "metrics", "checkpoints", "slots"];
+type Tab = "config" | "metrics" | "checkpoints" | "slots" | "review";
+const TABS: Tab[] = ["config", "metrics", "checkpoints", "slots", "review"];
 
 export function Experiments() {
   const { experiments } = useExperiments();

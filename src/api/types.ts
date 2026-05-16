@@ -158,6 +158,10 @@ export interface RunDetail {
   config: RunConfig | null;
 }
 
+export interface RunReview {
+  content: string | null;
+}
+
 // ─── Checkpoints ────────────────────────────────────────────────────────────
 
 export interface CheckpointMeta {

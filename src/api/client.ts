@@ -7,6 +7,7 @@ import type {
   MetricsHistory,
   RunConfig,
   RunDetail,
+  RunReview,
   SceneListing,
   SceneViewDetail,
   SlotDiagnostic,
@@ -50,6 +51,8 @@ export const api = {
   listRuns: (experimentId: string) => get<RunConfig[]>(`/experiments/${experimentId}/runs`),
 
   getRun: (runId: string) => get<RunDetail>(`/runs/${runId}`),
+
+  getRunReview: (runId: string) => get<RunReview>(`/runs/${runId}/review`),
 
   getRunMetrics: (runId: string, startEpoch?: number, endEpoch?: number) => {
     const params = new URLSearchParams();
