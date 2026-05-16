@@ -1,5 +1,6 @@
 import React from "react";
 import { ConnectionItem, type GTConnection } from "./ConnectionItem";
+import { CSGTreeVisualizer, type CSGTree } from "./CSGTreeVisualizer";
 import { PrimitiveItem, type GTPrimitive } from "./PrimitiveItem";
 import { RawJsonViewer } from "./RawJsonViewer";
 import { TagChips } from "./TagChips";
@@ -8,6 +9,7 @@ interface GroundTruth {
   primitives?: GTPrimitive[];
   connections?: GTConnection[];
   tags?: string[];
+  csg_tree?: CSGTree | null;
 }
 
 interface GroundTruthPanelProps {
@@ -24,6 +26,7 @@ export function GroundTruthPanel({ groundTruth }: GroundTruthPanelProps) {
   const connections = gt.connections ?? [];
   const tags = gt.tags ?? [];
   const primitiveTypes = primitives.map((p) => p.type);
+  const csgTree = gt.csg_tree && gt.csg_tree.root ? gt.csg_tree : null;
 
   return (
     <div style={s.panel}>
@@ -65,6 +68,15 @@ export function GroundTruthPanel({ groundTruth }: GroundTruthPanelProps) {
         </div>
         <TagChips tags={tags} />
       </section>
+
+      {csgTree && (
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionLabel}>CSG Tree</span>
+          </div>
+          <CSGTreeVisualizer csgTree={csgTree} primitives={primitives} />
+        </section>
+      )}
 
       <section style={s.section}>
         <RawJsonViewer data={groundTruth} />
