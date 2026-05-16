@@ -5,7 +5,7 @@ import { CheckpointPicker } from "../components/playground/CheckpointPicker";
 import { SlotCard } from "../components/playground/SlotCard";
 import { ViewSelector } from "../components/playground/ViewSelector";
 import { SDFViewer } from "../components/SDFViewer";
-import { TierList } from "../components/scenes/TierList";
+import { TagFilteredScenePicker } from "../components/scenes/TagFilteredScenePicker";
 import { useGroundTruthGlsl } from "../hooks/useGroundTruthGlsl";
 import { useInference } from "../hooks/useInference";
 import { useSceneViewDetail } from "../hooks/useSceneViewDetail";
@@ -69,10 +69,10 @@ export function Playground() {
           <CheckpointPicker selection={checkpoint} onSelect={setCheckpoint} />
         </Section>
         <Section title="Scene">
-          <TierList
-            selectedTier={scene?.tier ?? null}
-            selectedScene={scene?.scene ?? null}
-            onSelect={(tier, sceneName) => setScene({ tier, scene: sceneName })}
+          <TagFilteredScenePicker
+            selectedTier={scene?.tier}
+            selectedScene={scene?.scene}
+            onSceneSelect={(tier, sceneName) => setScene({ tier, scene: sceneName })}
           />
         </Section>
         {sceneDetail && (

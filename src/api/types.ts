@@ -175,7 +175,18 @@ export interface TierListing {
 
 export interface SceneListing {
   tier: string;
+  total: number;
   scenes: string[];
+}
+
+export interface TierTag {
+  tag: string;
+  count: number;
+}
+
+export interface TierTagListing {
+  tier: string;
+  tags: TierTag[];
 }
 
 export interface SceneCamera {

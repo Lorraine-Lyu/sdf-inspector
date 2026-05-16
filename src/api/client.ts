@@ -12,6 +12,7 @@ import type {
   SlotDiagnostic,
   SlotDiagnosticListing,
   TierListing,
+  TierTagListing,
   TrainingStatus,
 } from "./types";
 
@@ -70,7 +71,19 @@ export const api = {
   // ── Scene views ───────────────────────────────────────────────────────────
   listTiers: () => get<TierListing>("/scene_views/"),
 
-  listScenesInTier: (tier: string) => get<SceneListing>(`/scene_views/${tier}`),
+  listTierTags: (tier: string) => get<TierTagListing>(`/scene_views/${tier}/tags`),
+
+  listScenesInTier: (
+    tier: string,
+    opts: { tags?: string[]; limit?: number; offset?: number } = {}
+  ) => {
+    const params = new URLSearchParams();
+    if (opts.tags && opts.tags.length > 0) params.set("tags", opts.tags.join(","));
+    if (opts.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts.offset !== undefined) params.set("offset", String(opts.offset));
+    const qs = params.toString();
+    return get<SceneListing>(`/scene_views/${tier}${qs ? `?${qs}` : ""}`);
+  },
 
   getSceneViewDetail: (tier: string, scene: string) =>
     get<SceneViewDetail>(`/scene_views/${tier}/${scene}`),

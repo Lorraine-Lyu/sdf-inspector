@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TierList } from "../components/scenes/TierList";
+import { TagFilteredScenePicker } from "../components/scenes/TagFilteredScenePicker";
 import { SceneViewDetail } from "../components/scenes/SceneViewDetail";
 
 export function SceneBrowser() {
@@ -10,10 +10,10 @@ export function SceneBrowser() {
       <div style={s.left}>
         <div style={s.sectionLabel}>Tiers</div>
         <div style={s.scroll}>
-          <TierList
-            selectedTier={selected?.tier ?? null}
-            selectedScene={selected?.scene ?? null}
-            onSelect={(tier, scene) => setSelected({ tier, scene })}
+          <TagFilteredScenePicker
+            selectedTier={selected?.tier}
+            selectedScene={selected?.scene}
+            onSceneSelect={(tier, scene) => setSelected({ tier, scene })}
           />
         </div>
       </div>
