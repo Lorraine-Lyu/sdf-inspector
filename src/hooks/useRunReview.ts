@@ -7,7 +7,11 @@ import { api } from "../api/client";
  * both before loading and when the run has no review — callers should rely on
  * `loaded` to distinguish "no review" from "not fetched yet".
  */
-export function useRunReview(runId: string | null, enabled: boolean) {
+export function useRunReview(
+  runId: string | null,
+  enabled: boolean,
+  experimentId: string | null = null
+) {
   const [content, setContent] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,7 +23,7 @@ export function useRunReview(runId: string | null, enabled: boolean) {
     setLoading(true);
     setError(null);
     api
-      .getRunReview(runId)
+      .getRunReview(runId, experimentId)
       .then((r) => {
         if (cancelled) return;
         setContent(r.content);
@@ -34,7 +38,7 @@ export function useRunReview(runId: string | null, enabled: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [runId, enabled]);
+  }, [runId, enabled, experimentId]);
 
   return { content, loaded, loading, error };
 }

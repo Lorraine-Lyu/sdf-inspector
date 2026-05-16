@@ -58,6 +58,7 @@ export function Dashboard({ status, metrics, latestDiagnosticEpoch }: DashboardP
           {runId && diagnostic && (
             <SlotDiagnosticsSummary
               runId={runId}
+              experimentId={status?.experiment_id ?? null}
               diagnostic={diagnostic}
               loading={diagnosticLoading}
             />

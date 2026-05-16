@@ -8,12 +8,13 @@ import { TypeHeatmap } from "./TypeHeatmap";
 
 interface SlotDiagnosticsTabProps {
   runId: string;
+  experimentId?: string | null;
 }
 
 const ALL_TIERS = "__all__";
 
-export function SlotDiagnosticsTab({ runId }: SlotDiagnosticsTabProps) {
-  const { list, loading: listLoading } = useSlotDiagnosticList(runId);
+export function SlotDiagnosticsTab({ runId, experimentId = null }: SlotDiagnosticsTabProps) {
+  const { list, loading: listLoading } = useSlotDiagnosticList(runId, experimentId);
   const [epoch, setEpoch] = useState<number | null>(null);
   const [tierFilter, setTierFilter] = useState<string>(ALL_TIERS);
 
@@ -24,7 +25,7 @@ export function SlotDiagnosticsTab({ runId }: SlotDiagnosticsTabProps) {
     }
   }, [list, epoch]);
 
-  const { diagnostic, loading } = useSlotDiagnostic(runId, epoch);
+  const { diagnostic, loading } = useSlotDiagnostic(runId, epoch, experimentId);
 
   const tierOptions = useMemo(() => {
     const tiers = (diagnostic?.per_tier ?? []).map((t) => t.tier_filter);

@@ -13,19 +13,25 @@ export function Experiments() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     searchParams.get("run")
   );
+  const [selectedExperimentId, setSelectedExperimentId] = useState<string | null>(
+    searchParams.get("exp")
+  );
   const initialTab = (searchParams.get("tab") as Tab | null) ?? "config";
   const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : "config");
 
   // Keep URL search params in sync with selection so the dashboard's
-  // "View →" deep link can target a specific run + tab.
+  // "View →" deep link can target a specific run + tab. `exp` disambiguates
+  // runs that share a name across experiments.
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (selectedRunId) next.set("run", selectedRunId);
     else next.delete("run");
+    if (selectedExperimentId) next.set("exp", selectedExperimentId);
+    else next.delete("exp");
     next.set("tab", tab);
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRunId, tab]);
+  }, [selectedRunId, selectedExperimentId, tab]);
 
   return (
     <div style={s.page}>
@@ -35,14 +41,22 @@ export function Experiments() {
           <ExperimentList
             experiments={experiments}
             selectedRunId={selectedRunId}
-            onSelectRun={(runId) => setSelectedRunId(runId)}
+            onSelectRun={(runId, experimentId) => {
+              setSelectedRunId(runId);
+              setSelectedExperimentId(experimentId);
+            }}
           />
         </div>
       </div>
 
       <div style={s.right}>
         {selectedRunId ? (
-          <RunDetail runId={selectedRunId} tab={tab} onTabChange={setTab} />
+          <RunDetail
+            runId={selectedRunId}
+            experimentId={selectedExperimentId}
+            tab={tab}
+            onTabChange={setTab}
+          />
         ) : (
           <div style={s.empty}>Select a run from the list</div>
         )}

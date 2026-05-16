@@ -13,14 +13,15 @@ const TABS: RunTab[] = ["config", "metrics", "checkpoints", "slots", "review"];
 
 interface RunDetailProps {
   runId: string;
+  experimentId?: string | null;
   tab: RunTab;
   onTabChange: (tab: RunTab) => void;
 }
 
-export function RunDetail({ runId, tab, onTabChange }: RunDetailProps) {
-  const { run, loading } = useRunDetail(runId);
-  const { metrics } = useRunMetrics(runId);
-  const { checkpoints } = useCheckpoints(runId);
+export function RunDetail({ runId, experimentId = null, tab, onTabChange }: RunDetailProps) {
+  const { run, loading } = useRunDetail(runId, experimentId);
+  const { metrics } = useRunMetrics(runId, experimentId);
+  const { checkpoints } = useCheckpoints(runId, experimentId);
 
   if (loading) return <div style={s.loading}>Loading…</div>;
   if (!run) return <div style={s.loading}>Run not found</div>;
@@ -67,19 +68,27 @@ export function RunDetail({ runId, tab, onTabChange }: RunDetailProps) {
 
       {tab === "checkpoints" && (
         <div style={s.tabContent}>
-          <CheckpointList checkpoints={checkpoints} runId={runId} />
+          <CheckpointList
+            checkpoints={checkpoints}
+            runId={runId}
+            experimentId={experimentId}
+          />
         </div>
       )}
 
       {tab === "slots" && (
         <div style={s.tabContent}>
-          <SlotDiagnosticsTab runId={runId} />
+          <SlotDiagnosticsTab runId={runId} experimentId={experimentId} />
         </div>
       )}
 
       {tab === "review" && (
         <div style={s.tabContent}>
-          <ReviewTab runId={runId} active={tab === "review"} />
+          <ReviewTab
+            runId={runId}
+            experimentId={experimentId}
+            active={tab === "review"}
+          />
         </div>
       )}
     </div>

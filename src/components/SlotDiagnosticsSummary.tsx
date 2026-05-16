@@ -4,12 +4,14 @@ import type { SlotDiagnostic } from "../api/types";
 
 interface SlotDiagnosticsSummaryProps {
   runId: string | null;
+  experimentId?: string | null;
   diagnostic: SlotDiagnostic | null;
   loading: boolean;
 }
 
 export function SlotDiagnosticsSummary({
   runId,
+  experimentId = null,
   diagnostic,
   loading,
 }: SlotDiagnosticsSummaryProps) {
@@ -54,7 +56,12 @@ export function SlotDiagnosticsSummary({
       </div>
       <div style={s.row}>
         <span style={s.muted}>Last diagnostic: epoch {diagnostic.epoch}</span>
-        <Link to={`/experiments?run=${encodeURIComponent(runId)}&tab=slots`} style={s.link}>
+        <Link
+          to={`/experiments?run=${encodeURIComponent(runId)}${
+            experimentId ? `&exp=${encodeURIComponent(experimentId)}` : ""
+          }&tab=slots`}
+          style={s.link}
+        >
           View →
         </Link>
       </div>

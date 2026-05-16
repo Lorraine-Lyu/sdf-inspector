@@ -16,7 +16,8 @@ export function Playground() {
   const [checkpoint, setCheckpoint] = useState<CheckpointSelection | null>(() => {
     const runId = searchParams.get("run");
     const ckpt = searchParams.get("checkpoint");
-    if (runId && ckpt) return { experimentId: "", runId, checkpointId: ckpt };
+    const exp = searchParams.get("experiment");
+    if (runId && ckpt) return { experimentId: exp ?? "", runId, checkpointId: ckpt };
     return null;
   });
 
@@ -48,6 +49,9 @@ export function Playground() {
     if (!checkpoint || !scene) return;
     void predict({
       run_id: checkpoint.runId,
+      ...(checkpoint.experimentId
+        ? { experiment_id: checkpoint.experimentId }
+        : {}),
       checkpoint_id: checkpoint.checkpointId,
       scene_path: `${scene.tier}/${scene.scene}`,
       view_indices: selectedViews,

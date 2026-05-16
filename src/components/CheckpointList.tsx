@@ -5,9 +5,10 @@ import { Link } from "react-router-dom";
 interface CheckpointListProps {
   checkpoints: CheckpointMeta[];
   runId: string;
+  experimentId?: string | null;
 }
 
-export function CheckpointList({ checkpoints, runId }: CheckpointListProps) {
+export function CheckpointList({ checkpoints, runId, experimentId = null }: CheckpointListProps) {
   if (checkpoints.length === 0) {
     return <div style={s.empty}>No checkpoints yet</div>;
   }
@@ -22,7 +23,10 @@ export function CheckpointList({ checkpoints, runId }: CheckpointListProps) {
         <span style={s.th}>Actions</span>
       </div>
       {[...checkpoints].reverse().map((c) => {
-        const playgroundUrl = `/playground?run=${encodeURIComponent(runId)}&checkpoint=${encodeURIComponent(c.id)}`;
+        const expParam = experimentId
+          ? `&experiment=${encodeURIComponent(experimentId)}`
+          : "";
+        const playgroundUrl = `/playground?run=${encodeURIComponent(runId)}&checkpoint=${encodeURIComponent(c.id)}${expParam}`;
         return (
           <div key={c.id} style={s.row}>
             <span style={s.mono}>{c.id}</span>
