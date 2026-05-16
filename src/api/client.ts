@@ -1,6 +1,7 @@
 import type {
   CheckpointMeta,
   Experiment,
+  ExperimentDetail,
   GroundTruthGlsl,
   InferencePrediction,
   InferenceRequest,
@@ -53,6 +54,9 @@ export const api = {
 
   // ── Experiments / runs ────────────────────────────────────────────────────
   listExperiments: () => get<Experiment[]>("/experiments"),
+
+  getExperiment: (experimentId: string) =>
+    get<ExperimentDetail>(`/experiments/${experimentId}`),
 
   listRuns: (experimentId: string) => get<RunConfig[]>(`/experiments/${experimentId}/runs`),
 

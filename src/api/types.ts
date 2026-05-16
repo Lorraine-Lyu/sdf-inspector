@@ -152,6 +152,14 @@ export interface Experiment {
   best_val_loss: number | null;
 }
 
+export interface ExperimentDetail {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string | null;
+  config: ExperimentConfig & { aggregation?: string };
+}
+
 export interface RunDetail {
   id: string;
   experiment_id: string;

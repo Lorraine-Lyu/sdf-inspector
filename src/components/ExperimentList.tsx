@@ -5,7 +5,9 @@ import { useRuns } from "../hooks/useRuns";
 interface ExperimentListProps {
   experiments: Experiment[];
   selectedRunId: string | null;
+  selectedExperimentId: string | null;
   onSelectRun: (runId: string, experimentId: string) => void;
+  onSelectExperiment: (experimentId: string) => void;
 }
 
 function RunRow({
@@ -33,18 +35,32 @@ function RunRow({
 function ExperimentRow({
   exp,
   selectedRunId,
+  selectedExperimentId,
   onSelectRun,
+  onSelectExperiment,
 }: {
   exp: Experiment;
   selectedRunId: string | null;
+  selectedExperimentId: string | null;
   onSelectRun: (runId: string, experimentId: string) => void;
+  onSelectExperiment: (experimentId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { runs } = useRuns(expanded ? exp.id : null);
+  const expSelected = selectedExperimentId === exp.id && !selectedRunId;
 
   return (
     <div style={es.expBlock}>
-      <div style={es.expRow} onClick={() => setExpanded((v) => !v)}>
+      <div
+        style={{
+          ...es.expRow,
+          background: expSelected ? "#3f3f3f" : "transparent",
+        }}
+        onClick={() => {
+          setExpanded((v) => !v);
+          onSelectExperiment(exp.id);
+        }}
+      >
         <span style={es.arrow}>{expanded ? "▾" : "▸"}</span>
         <div style={es.expInfo}>
           <span style={es.expName}>{exp.name || exp.id}</span>
@@ -70,7 +86,9 @@ function ExperimentRow({
 export function ExperimentList({
   experiments,
   selectedRunId,
+  selectedExperimentId,
   onSelectRun,
+  onSelectExperiment,
 }: ExperimentListProps) {
   if (experiments.length === 0) {
     return (
@@ -86,7 +104,9 @@ export function ExperimentList({
           key={exp.id}
           exp={exp}
           selectedRunId={selectedRunId}
+          selectedExperimentId={selectedExperimentId}
           onSelectRun={onSelectRun}
+          onSelectExperiment={onSelectExperiment}
         />
       ))}
     </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ExperimentConfigPanel } from "../components/ExperimentConfigPanel";
 import { ExperimentList } from "../components/ExperimentList";
 import { RunDetail } from "../components/RunDetail";
 import { useExperiments } from "../hooks/useExperiments";
@@ -41,9 +42,14 @@ export function Experiments() {
           <ExperimentList
             experiments={experiments}
             selectedRunId={selectedRunId}
+            selectedExperimentId={selectedExperimentId}
             onSelectRun={(runId, experimentId) => {
               setSelectedRunId(runId);
               setSelectedExperimentId(experimentId);
+            }}
+            onSelectExperiment={(experimentId) => {
+              setSelectedExperimentId(experimentId);
+              setSelectedRunId(null);
             }}
           />
         </div>
@@ -57,8 +63,10 @@ export function Experiments() {
             tab={tab}
             onTabChange={setTab}
           />
+        ) : selectedExperimentId ? (
+          <ExperimentConfigPanel experimentId={selectedExperimentId} />
         ) : (
-          <div style={s.empty}>Select a run from the list</div>
+          <div style={s.empty}>Select an experiment or run from the list</div>
         )}
       </div>
     </div>
