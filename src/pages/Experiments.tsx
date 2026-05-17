@@ -81,7 +81,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRight: "1px solid #3f3f3f",
     display: "flex",
     flexDirection: "column",
-    paddingRight: 0,
+    padding: "0 24px",
   },
   sectionLabel: {
     fontSize: 11,

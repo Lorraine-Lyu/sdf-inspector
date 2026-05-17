@@ -173,7 +173,8 @@ const s: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: 16,
     overflowY: "auto",
-    paddingRight: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
     borderRight: "1px solid #3f3f3f",
   },
   middle: {
