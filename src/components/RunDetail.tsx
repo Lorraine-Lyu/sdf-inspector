@@ -2,6 +2,7 @@ import React from "react";
 import type { RunConfig } from "../api/types";
 import { CheckpointList } from "./CheckpointList";
 import { MetricChartGrid } from "./MetricChartGrid";
+import { MetricFinalValues } from "./MetricFinalValues";
 import { ReviewTab } from "./ReviewTab";
 import { SlotDiagnosticsTab } from "./experiments/SlotDiagnosticsTab";
 import { useCheckpoints } from "../hooks/useCheckpoints";
@@ -74,6 +75,7 @@ export function RunDetail({ runId, experimentId, tab, onTabChange }: RunDetailPr
 
       {tab === "metrics" && (
         <div style={s.tabContent}>
+          <MetricFinalValues metrics={metrics} />
           <MetricChartGrid metrics={metrics} isLive={false} />
         </div>
       )}
