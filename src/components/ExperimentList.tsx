@@ -19,12 +19,27 @@ function RunRow({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const remote = run.locality === "remote";
   return (
     <div
       style={{ ...rs.row, background: selected ? "#3f3f3f" : "transparent" }}
       onClick={onSelect}
     >
       <span style={rs.runId}>{run.run_id}</span>
+      <span
+        style={{
+          ...rs.badge,
+          color: remote ? "#8e8ea0" : "#10a37f",
+          borderColor: remote ? "#3f3f3f" : "#1f6f5c",
+        }}
+        title={
+          remote
+            ? "Pulled from cloud — no local checkpoints"
+            : "Checkpoints present on this device"
+        }
+      >
+        {remote ? "remote" : "local"}
+      </span>
       <span style={rs.meta}>
         {run.num_epochs ?? "—"} ep · tiers {run.tiers ?? "?"}
       </span>
@@ -144,6 +159,14 @@ const rs: Record<string, React.CSSProperties> = {
     color: "#8e8ea0",
     flex: 1,
     fontFamily: "ui-monospace, monospace",
+  },
+  badge: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    border: "1px solid",
+    borderRadius: 8,
+    padding: "1px 6px",
   },
   meta: { fontSize: 11, color: "#565869" },
 };

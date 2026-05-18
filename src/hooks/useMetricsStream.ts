@@ -6,6 +6,7 @@ import type {
   DiagnosticEvent,
   MetricsEvent,
   MetricsHistory,
+  SyncCompleteEvent,
   WsEvent,
 } from "../api/types";
 import { EMPTY_METRICS } from "../api/types";
@@ -18,6 +19,7 @@ interface UseMetricsStreamOptions {
   onMetricsUpdate: TrainingStatusHook["applyMetricsUpdate"];
   onDiagnostic?: (ev: DiagnosticEvent) => void;
   onAlert?: (ev: AlertEvent) => void;
+  onSyncComplete?: (ev: SyncCompleteEvent) => void;
 }
 
 /** Append every numeric field of a metrics event to the history.
@@ -42,6 +44,7 @@ export function useMetricsStream({
   onMetricsUpdate,
   onDiagnostic,
   onAlert,
+  onSyncComplete,
 }: UseMetricsStreamOptions) {
   const [metrics, setMetrics] = useState<MetricsHistory>(EMPTY_METRICS);
   const [latestDiagnosticEpoch, setLatestDiagnosticEpoch] = useState<number | null>(null);
@@ -126,9 +129,12 @@ export function useMetricsStream({
         case "alert":
           onAlert?.(event);
           break;
+        case "sync_complete":
+          onSyncComplete?.(event);
+          break;
       }
     };
-  }, [onStatusEvent, onMetricsUpdate, onDiagnostic, onAlert]);
+  }, [onStatusEvent, onMetricsUpdate, onDiagnostic, onAlert, onSyncComplete]);
 
   useEffect(() => {
     unmountedRef.current = false;

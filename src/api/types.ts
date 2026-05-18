@@ -141,6 +141,15 @@ export interface RunConfig {
   rendered_dir: string;
   tiers: string;
   tier_scene_counts?: Record<string, number> | null;
+  /** "remote" = pulled from cloud, no local checkpoints. Absent ⇒ treat as local. */
+  locality?: "local" | "remote";
+}
+
+export interface SyncStatus {
+  configured: boolean;
+  syncing: boolean;
+  last_sync: string | null;
+  last_result: string | null;
 }
 
 export interface Experiment {
@@ -327,7 +336,18 @@ export interface AlertEvent {
   message: string;
 }
 
-export type WsEvent = MetricsEvent | StatusEvent | DiagnosticEvent | AlertEvent;
+export interface SyncCompleteEvent {
+  type: "sync_complete";
+  success: boolean;
+  error?: string;
+}
+
+export type WsEvent =
+  | MetricsEvent
+  | StatusEvent
+  | DiagnosticEvent
+  | AlertEvent
+  | SyncCompleteEvent;
 
 // ─── Misc ───────────────────────────────────────────────────────────────────
 

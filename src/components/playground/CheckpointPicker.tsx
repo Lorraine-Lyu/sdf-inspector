@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../../api/client";
 import type { CheckpointMeta, Experiment, RunConfig } from "../../api/types";
 import { useExperiments } from "../../hooks/useExperiments";
+import { useFetchCheckpoint } from "../../hooks/useFetchCheckpoint";
 import { useRuns } from "../../hooks/useRuns";
+import { useToast } from "../Toast";
 
 export interface CheckpointSelection {
   experimentId: string;
@@ -79,11 +81,28 @@ function RunBlock({
 }) {
   const [expanded, setExpanded] = useState(selection?.runId === run.run_id);
   const [checkpoints, setCheckpoints] = useState<CheckpointMeta[]>([]);
+  const { fetch, fetchingFile } = useFetchCheckpoint();
+  const { addToast } = useToast();
+  const isRemote = run.locality === "remote";
+
+  const reload = useCallback(() => {
+    api.listCheckpoints(run.run_id, experimentId).then(setCheckpoints).catch(() => {});
+  }, [run.run_id, experimentId]);
 
   useEffect(() => {
     if (!expanded) return;
-    api.listCheckpoints(run.run_id, experimentId).then(setCheckpoints).catch(() => {});
-  }, [expanded, run.run_id, experimentId]);
+    reload();
+  }, [expanded, reload]);
+
+  const handleFetch = async (file: string) => {
+    const ok = await fetch(experimentId, run.run_id, file);
+    if (ok) {
+      addToast(`Fetched ${file}`, "success");
+      reload();
+    } else {
+      addToast(`Failed to fetch ${file}`, "error");
+    }
+  };
 
   return (
     <div style={{ ...s.block, paddingLeft: 18 }}>
@@ -93,29 +112,62 @@ function RunBlock({
       </div>
       {expanded &&
         checkpoints
-          .filter((c) => c.has_weights)
+          // Local + deleted (no weights, not remote) → hide entirely.
+          .filter((c) => c.has_weights || isRemote)
           .map((c) => {
             const isSelected =
               selection?.runId === run.run_id && selection.checkpointId === c.id;
+            const file = c.id.endsWith(".pt") ? c.id : `${c.id}.pt`;
+            const fetching = fetchingFile === file;
+            const meta = (
+              <span style={s.ckptMeta}>
+                ep {c.epoch}
+                {c.val_loss !== null && c.val_loss !== undefined
+                  ? ` · val ${c.val_loss.toFixed(3)}`
+                  : ""}
+              </span>
+            );
+
+            if (c.has_weights) {
+              return (
+                <div
+                  key={c.id}
+                  style={{
+                    ...s.ckptRow,
+                    background: isSelected ? "#3f3f3f" : "transparent",
+                    color: isSelected ? "#ececec" : "#8e8ea0",
+                  }}
+                  onClick={() =>
+                    onSelect({ experimentId, runId: run.run_id, checkpointId: c.id })
+                  }
+                >
+                  {c.id}
+                  {meta}
+                </div>
+              );
+            }
+
+            // Remote, not yet fetched → disabled until fetched.
             return (
               <div
                 key={c.id}
-                style={{
-                  ...s.ckptRow,
-                  background: isSelected ? "#3f3f3f" : "transparent",
-                  color: isSelected ? "#ececec" : "#8e8ea0",
-                }}
-                onClick={() =>
-                  onSelect({ experimentId, runId: run.run_id, checkpointId: c.id })
-                }
+                style={{ ...s.ckptRow, color: "#565869", cursor: "default" }}
+                title="Stored in cloud — fetch required for inference"
               >
-                {c.id}
-                <span style={s.ckptMeta}>
-                  ep {c.epoch}
-                  {c.val_loss !== null && c.val_loss !== undefined
-                    ? ` · val ${c.val_loss.toFixed(3)}`
-                    : ""}
+                <span>
+                  {c.id}{" "}
+                  <button
+                    style={{ ...s.fetchBtn, ...(fetching ? s.fetchBtnOff : {}) }}
+                    disabled={fetching}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleFetch(file);
+                    }}
+                  >
+                    {fetching ? "Fetching…" : "↓ fetch"}
+                  </button>
                 </span>
+                {meta}
               </div>
             );
           })}
@@ -152,4 +204,16 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 10,
     color: "#565869",
   },
+  fetchBtn: {
+    fontSize: 10,
+    padding: "1px 6px",
+    marginLeft: 4,
+    background: "transparent",
+    border: "1px solid #3f3f3f",
+    borderRadius: 6,
+    color: "#8e8ea0",
+    cursor: "pointer",
+  },
+  fetchBtnOff: { color: "#565869", cursor: "not-allowed" },
 };
+

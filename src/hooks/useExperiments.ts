@@ -17,5 +17,13 @@ export function useExperiments() {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  // Cloud sync completing can add/remove experiments; App dispatches this
+  // window event on the `sync_complete` WS message so any mounted list
+  // refreshes without prop-drilling a refetch handler.
+  useEffect(() => {
+    window.addEventListener("experiments:refetch", fetch);
+    return () => window.removeEventListener("experiments:refetch", fetch);
+  }, [fetch]);
+
   return { experiments, loading, error, refetch: fetch };
 }

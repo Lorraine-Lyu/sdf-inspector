@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { SyncButton } from "../components/SyncButton";
 
 interface SidebarProps {
   wsConnected: boolean;
@@ -16,8 +17,11 @@ export function Sidebar({ wsConnected }: SidebarProps) {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
-        <span style={styles.logoIcon}>◈</span>
-        SDF Inspector
+        <div style={styles.logoRow}>
+          <span style={styles.logoIcon}>◈</span>
+          SDF Inspector
+        </div>
+        <SyncButton />
       </div>
       <nav style={styles.nav}>
         {NAV_ITEMS.map((item) => (
@@ -65,9 +69,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: "#ececec",
     display: "flex",
+    flexDirection: "column",
+    borderBottom: "1px solid #2f2f2f",
+  },
+  logoRow: {
+    display: "flex",
     alignItems: "center",
     gap: 8,
-    borderBottom: "1px solid #2f2f2f",
   },
   logoIcon: {
     fontSize: 16,

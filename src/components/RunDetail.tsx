@@ -21,10 +21,15 @@ interface RunDetailProps {
 export function RunDetail({ runId, experimentId, tab, onTabChange }: RunDetailProps) {
   const { run, loading } = useRunDetail(runId, experimentId);
   const { metrics } = useRunMetrics(runId, experimentId);
-  const { checkpoints } = useCheckpoints(runId, experimentId);
+  const { checkpoints, refetch: refetchCheckpoints } = useCheckpoints(
+    runId,
+    experimentId
+  );
 
   if (loading) return <div style={s.loading}>Loading…</div>;
   if (!run) return <div style={s.loading}>Run not found</div>;
+
+  const isRemote = run.config?.locality === "remote";
 
   return (
     <div style={s.root}>
@@ -37,6 +42,13 @@ export function RunDetail({ runId, experimentId, tab, onTabChange }: RunDetailPr
           )}
         </div>
       </div>
+
+      {isRemote && (
+        <div style={s.remoteBanner}>
+          ⓘ This run was produced on another device. Metrics and analysis are
+          available. Checkpoints must be fetched from cloud for inference.
+        </div>
+      )}
 
       <div style={s.tabs}>
         {TABS.map((t) => (
@@ -72,6 +84,8 @@ export function RunDetail({ runId, experimentId, tab, onTabChange }: RunDetailPr
             checkpoints={checkpoints}
             runId={runId}
             experimentId={experimentId}
+            locality={run.config?.locality}
+            onFetched={refetchCheckpoints}
           />
         </div>
       )}
@@ -144,6 +158,16 @@ const s: Record<string, React.CSSProperties> = {
   root: { display: "flex", flexDirection: "column", gap: 0, height: "100%" },
   loading: { color: "#565869", fontSize: 13, padding: 16 },
   muted: { color: "#565869", fontSize: 13 },
+  remoteBanner: {
+    background: "#2a2a1a",
+    border: "1px solid #5b5326",
+    borderRadius: 8,
+    padding: "10px 14px",
+    fontSize: 12,
+    color: "#d6c98a",
+    marginBottom: 14,
+    lineHeight: 1.5,
+  },
   summary: {
     padding: "0 0 14px 0",
     borderBottom: "1px solid #3f3f3f",

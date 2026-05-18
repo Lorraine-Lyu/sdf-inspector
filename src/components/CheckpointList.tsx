@@ -1,17 +1,46 @@
 import React from "react";
 import type { CheckpointMeta } from "../api/types";
 import { Link } from "react-router-dom";
+import { useFetchCheckpoint } from "../hooks/useFetchCheckpoint";
+import { useToast } from "./Toast";
 
 interface CheckpointListProps {
   checkpoints: CheckpointMeta[];
   runId: string;
   experimentId: string | null;
+  locality?: "local" | "remote";
+  /** Called after a successful cloud fetch so the parent can refetch the list. */
+  onFetched?: () => void;
 }
 
-export function CheckpointList({ checkpoints, runId, experimentId }: CheckpointListProps) {
+export function CheckpointList({
+  checkpoints,
+  runId,
+  experimentId,
+  locality,
+  onFetched,
+}: CheckpointListProps) {
+  const { fetch, fetchingFile } = useFetchCheckpoint();
+  const { addToast } = useToast();
+  const isRemote = locality === "remote";
+
   if (checkpoints.length === 0) {
     return <div style={s.empty}>No checkpoints yet</div>;
   }
+
+  const handleFetch = async (file: string) => {
+    if (!experimentId) {
+      addToast("Cannot fetch: experiment unknown", "error");
+      return;
+    }
+    const ok = await fetch(experimentId, runId, file);
+    if (ok) {
+      addToast(`Fetched ${file}`, "success");
+      onFetched?.();
+    } else {
+      addToast(`Failed to fetch ${file}`, "error");
+    }
+  };
 
   return (
     <div style={s.table}>
@@ -27,6 +56,9 @@ export function CheckpointList({ checkpoints, runId, experimentId }: CheckpointL
           ? `&experiment=${encodeURIComponent(experimentId)}`
           : "";
         const playgroundUrl = `/playground?run=${encodeURIComponent(runId)}&checkpoint=${encodeURIComponent(c.id)}${expParam}`;
+        const file = c.id.endsWith(".pt") ? c.id : `${c.id}.pt`;
+        const fetching = fetchingFile === file;
+
         return (
           <div key={c.id} style={s.row}>
             <span style={s.mono}>{c.id}</span>
@@ -37,6 +69,8 @@ export function CheckpointList({ checkpoints, runId, experimentId }: CheckpointL
             <span style={s.cell}>
               {c.has_weights ? (
                 <span style={s.weightYes}>● on disk</span>
+              ) : isRemote ? (
+                <span style={s.weightNo}>☁ cloud</span>
               ) : (
                 <span style={s.weightNo}>○ missing</span>
               )}
@@ -46,9 +80,17 @@ export function CheckpointList({ checkpoints, runId, experimentId }: CheckpointL
                 <Link to={playgroundUrl} style={s.btn}>
                   Open in Playground
                 </Link>
+              ) : isRemote ? (
+                <button
+                  style={{ ...s.btn, ...(fetching ? s.btnDisabled : {}) }}
+                  disabled={fetching}
+                  onClick={() => void handleFetch(file)}
+                >
+                  {fetching ? "Fetching…" : "↓ Fetch"}
+                </button>
               ) : (
                 <span style={{ ...s.btn, color: "#565869", borderColor: "#3f3f3f" }}>
-                  Unavailable
+                  deleted
                 </span>
               )}
             </span>
@@ -96,6 +138,7 @@ const s: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     display: "inline-block",
   },
+  btnDisabled: { color: "#565869", cursor: "not-allowed" },
   weightYes: { fontSize: 12, color: "#10a37f" },
   weightNo: { fontSize: 12, color: "#565869" },
   empty: { color: "#565869", fontSize: 13, padding: "16px 0" },

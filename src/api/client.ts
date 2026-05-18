@@ -13,6 +13,7 @@ import type {
   SceneViewDetail,
   SlotDiagnostic,
   SlotDiagnosticListing,
+  SyncStatus,
   TierListing,
   TierTagListing,
   TrainingStatus,
@@ -119,4 +120,16 @@ export const api = {
   // ── Inference ─────────────────────────────────────────────────────────────
   runInference: (request: InferenceRequest) =>
     post<InferencePrediction>("/inference", request),
+
+  // ── Sync ──────────────────────────────────────────────────────────────────
+  getSyncStatus: () => get<SyncStatus>("/sync/status"),
+
+  triggerSync: () => post<unknown>("/sync/pull", {}),
+
+  fetchCheckpoint: (expId: string, runId: string, checkpointFile: string) =>
+    post<unknown>("/sync/checkpoint", {
+      exp_id: expId,
+      run_id: runId,
+      checkpoint_file: checkpointFile,
+    }),
 };

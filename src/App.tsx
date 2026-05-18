@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import type { AlertEvent } from "./api/types";
+import type { AlertEvent, SyncCompleteEvent } from "./api/types";
 import { ToastProvider, useToast } from "./components/Toast";
 import { useMetricsStream } from "./hooks/useMetricsStream";
 import { useTrainingStatus } from "./hooks/useTrainingStatus";
@@ -33,12 +33,26 @@ function AppInner() {
     [applyStatusEvent, refetch]
   );
 
+  const handleSyncComplete = useCallback(
+    (ev: SyncCompleteEvent) => {
+      if (ev.success) {
+        addToast("Cloud sync complete", "success");
+      } else {
+        addToast(`Sync failed: ${ev.error || "unknown error"}`, "error");
+      }
+      // Decoupled refresh: any mounted experiment list re-fetches.
+      window.dispatchEvent(new Event("experiments:refetch"));
+    },
+    [addToast]
+  );
+
   const { metrics, latestDiagnosticEpoch, wsConnected } = useMetricsStream({
     runId: status?.run_id ?? null,
     experimentId: status?.experiment_id ?? null,
     onStatusEvent: handleStatusEvent,
     onMetricsUpdate: applyMetricsUpdate,
     onAlert: handleAlert,
+    onSyncComplete: handleSyncComplete,
   });
 
   return (
