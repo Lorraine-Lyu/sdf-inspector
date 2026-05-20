@@ -6,6 +6,7 @@ interface ExperimentListProps {
   experiments: Experiment[];
   selectedRunId: string | null;
   selectedExperimentId: string | null;
+  activeRunId: string | null;
   onSelectRun: (runId: string, experimentId: string) => void;
   onSelectExperiment: (experimentId: string) => void;
 }
@@ -13,10 +14,12 @@ interface ExperimentListProps {
 function RunRow({
   run,
   selected,
+  active,
   onSelect,
 }: {
   run: RunConfig;
   selected: boolean;
+  active: boolean;
   onSelect: () => void;
 }) {
   const remote = run.locality === "remote";
@@ -26,6 +29,18 @@ function RunRow({
       onClick={onSelect}
     >
       <span style={rs.runId}>{run.run_id}</span>
+      {active && (
+        <span
+          style={{
+            ...rs.badge,
+            color: "#e09f3e",
+            borderColor: "#8a6324",
+          }}
+          title="Currently training"
+        >
+          running
+        </span>
+      )}
       <span
         style={{
           ...rs.badge,
@@ -51,12 +66,14 @@ function ExperimentRow({
   exp,
   selectedRunId,
   selectedExperimentId,
+  activeRunId,
   onSelectRun,
   onSelectExperiment,
 }: {
   exp: Experiment;
   selectedRunId: string | null;
   selectedExperimentId: string | null;
+  activeRunId: string | null;
   onSelectRun: (runId: string, experimentId: string) => void;
   onSelectExperiment: (experimentId: string) => void;
 }) {
@@ -91,6 +108,7 @@ function ExperimentRow({
             key={run.run_id}
             run={run}
             selected={selectedRunId === run.run_id}
+            active={activeRunId === run.run_id}
             onSelect={() => onSelectRun(run.run_id, exp.id)}
           />
         ))}
@@ -102,6 +120,7 @@ export function ExperimentList({
   experiments,
   selectedRunId,
   selectedExperimentId,
+  activeRunId,
   onSelectRun,
   onSelectExperiment,
 }: ExperimentListProps) {
@@ -120,6 +139,7 @@ export function ExperimentList({
           exp={exp}
           selectedRunId={selectedRunId}
           selectedExperimentId={selectedExperimentId}
+          activeRunId={activeRunId}
           onSelectRun={onSelectRun}
           onSelectExperiment={onSelectExperiment}
         />

@@ -21,7 +21,7 @@ interface SectionSpec {
   name: string;
   charts: ChartSpec[];
   /** If true, hide whole section if every chart has only all-zero/empty data. */
-  hideIfAllZero?: boolean;
+  hideIfEmpty?: boolean;
 }
 
 const SECTIONS: SectionSpec[] = [
@@ -93,7 +93,7 @@ const SECTIONS: SectionSpec[] = [
   },
   {
     name: "Poincaré Losses",
-    hideIfAllZero: true,
+    hideIfEmpty: true,
     charts: [
       {
         title: "Poincaré Depth",
@@ -144,13 +144,18 @@ const SECTIONS: SectionSpec[] = [
   },
 ];
 
-function isColAllZero(col: number[] | undefined): boolean {
+/** True when the column has no real entries — empty, or only null/undefined.
+ *  Crucially, `0` counts as data: a metric that stays at zero (e.g. a Poincaré
+ *  head term the model didn't learn) is still meaningful to plot. */
+function isColEmpty(col: number[] | undefined): boolean {
   if (!col || col.length === 0) return true;
-  return col.every((v) => v === 0 || v === null || v === undefined);
+  return col.every((v) => v === null || v === undefined);
 }
 
 function chartHasData(chart: ChartSpec, metrics: MetricsHistory): boolean {
-  return chart.lines.some((line) => !isColAllZero(metrics[line.dataKey] as number[] | undefined));
+  return chart.lines.some(
+    (line) => !isColEmpty(metrics[line.dataKey] as number[] | undefined)
+  );
 }
 
 export function MetricChartGrid({ metrics }: MetricChartGridProps) {
@@ -179,7 +184,7 @@ export function MetricChartGrid({ metrics }: MetricChartGridProps) {
     <div style={styles.grid}>
       {SECTIONS.map((section) => {
         const visibleCharts = section.charts.filter((chart) => chartHasData(chart, metrics));
-        if (section.hideIfAllZero && visibleCharts.length === 0) return null;
+        if (section.hideIfEmpty && visibleCharts.length === 0) return null;
         return (
           <React.Fragment key={section.name}>
             <div style={styles.sectionHeader}>{section.name}</div>

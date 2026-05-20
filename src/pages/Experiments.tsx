@@ -4,12 +4,15 @@ import { ExperimentConfigPanel } from "../components/ExperimentConfigPanel";
 import { ExperimentList } from "../components/ExperimentList";
 import { RunDetail } from "../components/RunDetail";
 import { useExperiments } from "../hooks/useExperiments";
+import { useTrainingStatus } from "../hooks/useTrainingStatus";
 
 type Tab = "config" | "metrics" | "checkpoints" | "slots" | "review";
 const TABS: Tab[] = ["config", "metrics", "checkpoints", "slots", "review"];
 
 export function Experiments() {
   const { experiments } = useExperiments();
+  const { status } = useTrainingStatus();
+  const activeRunId = status?.state === "training" ? status.run_id : null;
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     searchParams.get("run")
@@ -43,6 +46,7 @@ export function Experiments() {
             experiments={experiments}
             selectedRunId={selectedRunId}
             selectedExperimentId={selectedExperimentId}
+            activeRunId={activeRunId}
             onSelectRun={(runId, experimentId) => {
               setSelectedRunId(runId);
               setSelectedExperimentId(experimentId);
