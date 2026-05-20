@@ -1,5 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type { MetricsHistory } from "../api/types";
+import { copyJson } from "../utils/clipboard";
 import { MetricChart, type MetricChartLine } from "./MetricChart";
 
 interface MetricChartGridProps {
@@ -175,13 +176,32 @@ export function MetricChartGrid({ metrics }: MetricChartGridProps) {
   }, [metrics]);
 
   const empty = metrics.epochs.length === 0;
+  const [copied, setCopied] = useState(false);
 
   if (empty) {
     return <div style={styles.empty}>Waiting for first epoch…</div>;
   }
 
+  const onCopyAll = async () => {
+    const ok = await copyJson(metrics);
+    if (ok) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    }
+  };
+
   return (
-    <div style={styles.grid}>
+    <div style={styles.root}>
+      <div style={styles.toolbar}>
+        <button
+          style={styles.copyAllBtn}
+          onClick={onCopyAll}
+          title="Copy all metrics as JSON"
+        >
+          {copied ? "Copied" : "Copy all metrics"}
+        </button>
+      </div>
+      <div style={styles.grid}>
       {SECTIONS.map((section) => {
         const visibleCharts = section.charts.filter((chart) => chartHasData(chart, metrics));
         if (section.hideIfEmpty && visibleCharts.length === 0) return null;
@@ -199,11 +219,32 @@ export function MetricChartGrid({ metrics }: MetricChartGridProps) {
           </React.Fragment>
         );
       })}
+      </div>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    width: "100%",
+  },
+  toolbar: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+  copyAllBtn: {
+    fontSize: 11,
+    padding: "4px 10px",
+    background: "transparent",
+    border: "1px solid #3f3f3f",
+    borderRadius: 6,
+    color: "#8e8ea0",
+    cursor: "pointer",
+    letterSpacing: "0.02em",
+  },
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))",
