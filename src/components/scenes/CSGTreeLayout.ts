@@ -3,7 +3,7 @@
 // terminals, op nodes sum their children's spans, x is the span center.
 
 export type TreeNode =
-  | { kind: "leaf"; primitive_idx: number }
+  | { kind: "leaf"; primitive_idx: number; layer?: number }
   | {
       kind: "op";
       op: string;
@@ -14,7 +14,7 @@ export type TreeNode =
     }
   | {
       kind: "cluster";
-      member_primitive_indices: number[];
+      members: TreeNode[];
       internal_op: string;
       internal_k: number;
     };
@@ -66,8 +66,7 @@ function clusterWidth(memberCount: number): number {
 /** Leaf-unit span of a subtree. Clusters reserve room for their members. */
 function span(node: TreeNode): number {
   if (node.kind === "leaf") return 1;
-  if (node.kind === "cluster")
-    return Math.max(1, node.member_primitive_indices.length);
+  if (node.kind === "cluster") return Math.max(1, node.members.length);
   return node.children.reduce((acc, c) => acc + span(c), 0) || 1;
 }
 
@@ -113,8 +112,7 @@ export function computeLayout(root: TreeNode): TreeLayout {
 
     let width = LEAF_W;
     if (node.kind === "op") width = OP_W;
-    else if (node.kind === "cluster")
-      width = clusterWidth(node.member_primitive_indices.length);
+    else if (node.kind === "cluster") width = clusterWidth(node.members.length);
 
     nodes.push({ id, node, x: cx, y, width, height: NODE_H });
 

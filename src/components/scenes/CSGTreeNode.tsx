@@ -140,10 +140,15 @@ export function CSGTreeNode({ ln, primitives, highlighted, onHover }: CSGTreeNod
       >
         {header}
       </text>
-      {node.member_primitive_indices.map((pidx, i) => {
+      {node.members.map((member, i) => {
         const mx = left + CLUSTER_PAD + i * CLUSTER_MEMBER_W;
+        const label =
+          member.kind === "leaf"
+            ? primLabel(member.primitive_idx, primitives)
+            : `(${member.kind})`;
+        const memberKey = member.kind === "leaf" ? `leaf-${member.primitive_idx}` : `${member.kind}-${i}`;
         return (
-          <g key={pidx}>
+          <g key={memberKey}>
             <rect
               x={mx}
               y={memberY}
@@ -163,7 +168,7 @@ export function CSGTreeNode({ ln, primitives, highlighted, onHover }: CSGTreeNod
               fontFamily="ui-monospace, monospace"
               fill="#ececec"
             >
-              {primLabel(pidx, primitives)}
+              {label}
             </text>
           </g>
         );

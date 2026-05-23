@@ -120,11 +120,15 @@ function tooltipFor(
   }
   return (
     <>
-      <Row k="cluster" v={`${node.member_primitive_indices.length} members`} />
+      <Row k="cluster" v={`${node.members.length} members`} />
       <Row
         k="members"
-        v={node.member_primitive_indices
-          .map((i) => `[${i}] ${primitives[i]?.type ?? "?"}`)
+        v={node.members
+          .map((m) =>
+            m.kind === "leaf"
+              ? `[${m.primitive_idx}] ${primitives[m.primitive_idx]?.type ?? "?"}`
+              : `(${m.kind})`
+          )
           .join(", ")}
       />
       <Row k="internal_op" v={node.internal_op} />
