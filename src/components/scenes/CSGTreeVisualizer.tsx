@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { rotation6dToEulerDeg } from "../../utils/rotation6d";
 import { CSGTreeEdge } from "./CSGTreeEdge";
 import { CSGTreeNode } from "./CSGTreeNode";
 import { computeLayout, type TreeNode } from "./CSGTreeLayout";
@@ -8,7 +9,7 @@ interface GTPrimitiveLike {
   params?: Record<string, unknown>;
   transform?: {
     translation?: number[];
-    rotation?: number[];
+    rotation_6d?: number[];
     scale?: number;
   };
 }
@@ -103,7 +104,12 @@ function tooltipFor(
           <Row key={k} k={k} v={Array.isArray(v) ? `(${v.map(fmt).join(", ")})` : fmt(v)} />
         ))}
         <Row k="translation" v={`(${(t.translation ?? [0, 0, 0]).map(fmt).join(", ")})`} />
-        <Row k="rotation" v={`(${(t.rotation ?? [0, 0, 0]).map(fmt).join(", ")})`} />
+        <Row
+          k="rotation (xyz)"
+          v={`(${rotation6dToEulerDeg(t.rotation_6d)
+            .map((d) => `${d.toFixed(1)}°`)
+            .join(", ")})`}
+        />
         <Row k="scale" v={fmt(t.scale ?? 1)} />
       </>
     );

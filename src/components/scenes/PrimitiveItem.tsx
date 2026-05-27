@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { rotation6dToEulerDeg } from "../../utils/rotation6d";
 
 export interface GTTransform {
   translation?: number[];
-  rotation?: number[];
+  rotation_6d?: number[];
   scale?: number;
 }
 
@@ -17,10 +18,8 @@ export interface GTPrimitive {
 const fmt = (n: unknown): string =>
   typeof n === "number" && Number.isFinite(n) ? n.toFixed(3) : String(n);
 
-const deg = (rad: unknown): string =>
-  typeof rad === "number" && Number.isFinite(rad)
-    ? `${((rad * 180) / Math.PI).toFixed(1)}°`
-    : String(rad);
+const degFmt = (d: number): string =>
+  Number.isFinite(d) ? `${d.toFixed(1)}°` : String(d);
 
 function paramValue(v: unknown): string {
   if (Array.isArray(v)) return `(${v.map(fmt).join(", ")})`;
@@ -37,7 +36,8 @@ export function PrimitiveItem({
   const [open, setOpen] = useState(false);
   const t = primitive.transform ?? {};
   const translation = t.translation ?? [0, 0, 0];
-  const rotation = t.rotation ?? [0, 0, 0];
+  const rotation6d = t.rotation_6d;
+  const eulerDeg = rotation6dToEulerDeg(rotation6d);
   const scale = t.scale ?? 1.0;
   const params = primitive.params ?? {};
 
@@ -70,9 +70,15 @@ export function PrimitiveItem({
             <span style={s.v}>({translation.map(fmt).join(", ")})</span>
           </div>
           <div style={s.kv}>
-            <span style={s.k}>rotation</span>
-            <span style={s.v}>({rotation.map(deg).join(", ")})</span>
+            <span style={s.k}>rotation (xyz)</span>
+            <span style={s.v}>({eulerDeg.map(degFmt).join(", ")})</span>
           </div>
+          {rotation6d && (
+            <div style={s.kv}>
+              <span style={s.k}>rotation_6d</span>
+              <span style={s.v}>({rotation6d.map(fmt).join(", ")})</span>
+            </div>
+          )}
           <div style={s.kv}>
             <span style={s.k}>scale</span>
             <span style={s.v}>{fmt(scale)}</span>
