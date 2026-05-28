@@ -6,6 +6,7 @@ import type {
   DiagnosticEvent,
   MetricsEvent,
   MetricsHistory,
+  SnapshotEvent,
   SyncCompleteEvent,
   WsEvent,
 } from "../api/types";
@@ -20,6 +21,7 @@ interface UseMetricsStreamOptions {
   onDiagnostic?: (ev: DiagnosticEvent) => void;
   onAlert?: (ev: AlertEvent) => void;
   onSyncComplete?: (ev: SyncCompleteEvent) => void;
+  onSnapshot?: (ev: SnapshotEvent) => void;
 }
 
 /** Append every numeric field of a metrics event to the history.
@@ -45,9 +47,11 @@ export function useMetricsStream({
   onDiagnostic,
   onAlert,
   onSyncComplete,
+  onSnapshot,
 }: UseMetricsStreamOptions) {
   const [metrics, setMetrics] = useState<MetricsHistory>(EMPTY_METRICS);
   const [latestDiagnosticEpoch, setLatestDiagnosticEpoch] = useState<number | null>(null);
+  const [latestSnapshotEpoch, setLatestSnapshotEpoch] = useState<number | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -60,6 +64,7 @@ export function useMetricsStream({
     if (!runId || !experimentId) {
       setMetrics(EMPTY_METRICS);
       setLatestDiagnosticEpoch(null);
+      setLatestSnapshotEpoch(null);
       return;
     }
     api
@@ -76,6 +81,16 @@ export function useMetricsStream({
         }
       })
       .catch(() => setLatestDiagnosticEpoch(null));
+    api
+      .listSnapshots(runId, experimentId)
+      .then((list) => {
+        if (list.length === 0) {
+          setLatestSnapshotEpoch(null);
+        } else {
+          setLatestSnapshotEpoch(list[list.length - 1].epoch);
+        }
+      })
+      .catch(() => setLatestSnapshotEpoch(null));
   }, [runId, experimentId]);
 
   const connect = useCallback(() => {
@@ -132,9 +147,13 @@ export function useMetricsStream({
         case "sync_complete":
           onSyncComplete?.(event);
           break;
+        case "snapshot":
+          setLatestSnapshotEpoch(event.epoch);
+          onSnapshot?.(event);
+          break;
       }
     };
-  }, [onStatusEvent, onMetricsUpdate, onDiagnostic, onAlert, onSyncComplete]);
+  }, [onStatusEvent, onMetricsUpdate, onDiagnostic, onAlert, onSyncComplete, onSnapshot]);
 
   useEffect(() => {
     unmountedRef.current = false;
@@ -146,5 +165,5 @@ export function useMetricsStream({
     };
   }, [connect]);
 
-  return { metrics, latestDiagnosticEpoch, wsConnected };
+  return { metrics, latestDiagnosticEpoch, latestSnapshotEpoch, wsConnected };
 }

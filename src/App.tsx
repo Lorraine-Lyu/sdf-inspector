@@ -46,14 +46,15 @@ function AppInner() {
     [addToast]
   );
 
-  const { metrics, latestDiagnosticEpoch, wsConnected } = useMetricsStream({
-    runId: status?.run_id ?? null,
-    experimentId: status?.experiment_id ?? null,
-    onStatusEvent: handleStatusEvent,
-    onMetricsUpdate: applyMetricsUpdate,
-    onAlert: handleAlert,
-    onSyncComplete: handleSyncComplete,
-  });
+  const { metrics, latestDiagnosticEpoch, latestSnapshotEpoch, wsConnected } =
+    useMetricsStream({
+      runId: status?.run_id ?? null,
+      experimentId: status?.experiment_id ?? null,
+      onStatusEvent: handleStatusEvent,
+      onMetricsUpdate: applyMetricsUpdate,
+      onAlert: handleAlert,
+      onSyncComplete: handleSyncComplete,
+    });
 
   return (
     <Layout wsConnected={wsConnected}>
@@ -65,6 +66,7 @@ function AppInner() {
               status={status}
               metrics={metrics}
               latestDiagnosticEpoch={latestDiagnosticEpoch}
+              latestSnapshotEpoch={latestSnapshotEpoch}
             />
           }
         />

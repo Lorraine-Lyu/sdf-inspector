@@ -7,10 +7,36 @@ interface ViewSelectorProps {
   views: SceneView[];
   selected: number[];
   onChange: (selected: number[]) => void;
+  /** When true, render thumbnails as read-only chips (no checkboxes, no
+   *  controls). The `selected` array is treated purely as the list to
+   *  display. Used by the reconstruction-snapshot view. */
+  displayOnly?: boolean;
 }
 
-export function ViewSelector({ views, selected, onChange }: ViewSelectorProps) {
+export function ViewSelector({
+  views,
+  selected,
+  onChange,
+  displayOnly = false,
+}: ViewSelectorProps) {
   if (views.length === 0) return <div style={s.muted}>No views available</div>;
+
+  if (displayOnly) {
+    const shown =
+      selected.length > 0
+        ? views.filter((v) => selected.includes(v.index))
+        : views;
+    return (
+      <div style={s.grid}>
+        {shown.map((v) => (
+          <div key={v.index} style={{ ...s.cell, outline: "1px solid #3f3f3f" }}>
+            <img src={resolveUrl(v.image_url)} alt={`v_${v.index}`} style={s.img} />
+            <span style={s.label}>v_{String(v.index).padStart(2, "0")}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const toggle = (idx: number) => {
     if (selected.includes(idx)) onChange(selected.filter((i) => i !== idx));
@@ -38,9 +64,6 @@ export function ViewSelector({ views, selected, onChange }: ViewSelectorProps) {
       <div style={s.grid}>
         {views.map((v) => {
           const isSel = selected.includes(v.index);
-          const url = v.image_url.startsWith("http")
-            ? v.image_url
-            : `${API_ORIGIN}${v.image_url}`;
           return (
             <label
               key={v.index}
@@ -55,7 +78,7 @@ export function ViewSelector({ views, selected, onChange }: ViewSelectorProps) {
                 onChange={() => toggle(v.index)}
                 style={s.checkbox}
               />
-              <img src={url} alt={`v_${v.index}`} style={s.img} />
+              <img src={resolveUrl(v.image_url)} alt={`v_${v.index}`} style={s.img} />
               <span style={s.label}>v_{String(v.index).padStart(2, "0")}</span>
             </label>
           );
@@ -63,6 +86,10 @@ export function ViewSelector({ views, selected, onChange }: ViewSelectorProps) {
       </div>
     </div>
   );
+}
+
+function resolveUrl(url: string): string {
+  return url.startsWith("http") ? url : `${API_ORIGIN}${url}`;
 }
 
 const s: Record<string, React.CSSProperties> = {

@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import type { MetricsHistory, SlotDiagnostic, TrainingStatus } from "../api/types";
 import { MetricCards } from "../components/MetricCards";
 import { MetricChartGrid } from "../components/MetricChartGrid";
+import { ReconstructionSnapshots } from "../components/dashboard/ReconstructionSnapshots";
 import { SlotDiagnosticsSummary } from "../components/SlotDiagnosticsSummary";
 import { TrainingStatusBadge } from "../components/TrainingStatusBadge";
 
@@ -10,6 +11,7 @@ interface DashboardProps {
   status: TrainingStatus | null;
   metrics: MetricsHistory;
   latestDiagnosticEpoch: number | null;
+  latestSnapshotEpoch: number | null;
 }
 
 function lastRow(metrics: MetricsHistory): Record<string, number> {
@@ -25,7 +27,12 @@ function lastRow(metrics: MetricsHistory): Record<string, number> {
   return out;
 }
 
-export function Dashboard({ status, metrics, latestDiagnosticEpoch }: DashboardProps) {
+export function Dashboard({
+  status,
+  metrics,
+  latestDiagnosticEpoch,
+  latestSnapshotEpoch,
+}: DashboardProps) {
   const runId = status?.run_id ?? null;
   const experimentId = status?.experiment_id ?? null;
   const [diagnostic, setDiagnostic] = useState<SlotDiagnostic | null>(null);
@@ -70,6 +77,12 @@ export function Dashboard({ status, metrics, latestDiagnosticEpoch }: DashboardP
           <MetricChartGrid metrics={metrics} isLive={true} />
         </div>
       </div>
+
+      <ReconstructionSnapshots
+        runId={runId}
+        experimentId={experimentId}
+        latestEpoch={latestSnapshotEpoch}
+      />
     </div>
   );
 }

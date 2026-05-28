@@ -342,12 +342,44 @@ export interface SyncCompleteEvent {
   error?: string;
 }
 
+export interface SnapshotEvent {
+  type: "snapshot";
+  epoch: number;
+  num_scenes: number;
+}
+
 export type WsEvent =
   | MetricsEvent
   | StatusEvent
   | DiagnosticEvent
   | AlertEvent
-  | SyncCompleteEvent;
+  | SyncCompleteEvent
+  | SnapshotEvent;
+
+// ─── Reconstruction snapshots ───────────────────────────────────────────────
+
+export interface SnapshotEpochListing {
+  epoch: number;
+  num_scenes: number;
+}
+
+/** One scene's prediction JSON from a snapshot epoch (matches the file the
+ *  training loop writes to snapshots/epoch_NNN/<scene_id>.json). */
+export interface SnapshotScene {
+  scene_path: string;
+  epoch: number;
+  view_indices: number[];
+  /** Raw per-head tensor outputs keyed by head name (exists_logits, type_logits, ...).
+   *  Shape varies per head; values are arrays of numbers / strings. */
+  raw_predictions: Record<string, unknown>;
+  slots: SlotPrediction[];
+  predicted_sdf: string;
+}
+
+export interface SnapshotEpochDetail {
+  epoch: number;
+  scenes: SnapshotScene[];
+}
 
 // ─── Misc ───────────────────────────────────────────────────────────────────
 

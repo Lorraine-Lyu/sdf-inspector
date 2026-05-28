@@ -13,6 +13,9 @@ import type {
   SceneViewDetail,
   SlotDiagnostic,
   SlotDiagnosticListing,
+  SnapshotEpochDetail,
+  SnapshotEpochListing,
+  SnapshotScene,
   SyncStatus,
   TierListing,
   TierTagListing,
@@ -92,6 +95,25 @@ export const api = {
   getSlotDiagnostic: (runId: string, epoch: number, experimentId: string) =>
     get<SlotDiagnostic>(
       `/runs/${runId}/diagnostics/slots/${epoch}${expQuery(experimentId)}`
+    ),
+
+  // ── Reconstruction snapshots ──────────────────────────────────────────────
+  listSnapshots: (runId: string, experimentId: string) =>
+    get<SnapshotEpochListing[]>(`/runs/${runId}/snapshots${expQuery(experimentId)}`),
+
+  getSnapshotEpoch: (runId: string, epoch: number, experimentId: string) =>
+    get<SnapshotEpochDetail>(
+      `/runs/${runId}/snapshots/${epoch}${expQuery(experimentId)}`
+    ),
+
+  getSnapshotScene: (
+    runId: string,
+    epoch: number,
+    sceneId: string,
+    experimentId: string
+  ) =>
+    get<SnapshotScene>(
+      `/runs/${runId}/snapshots/${epoch}/${encodeURIComponent(sceneId)}${expQuery(experimentId)}`
     ),
 
   // ── Scene views ───────────────────────────────────────────────────────────
