@@ -4,6 +4,7 @@ import type { MetricsHistory, SlotDiagnostic, TrainingStatus } from "../api/type
 import { MetricCards } from "../components/MetricCards";
 import { MetricChartGrid } from "../components/MetricChartGrid";
 import { ReconstructionSnapshots } from "../components/dashboard/ReconstructionSnapshots";
+import { SectionHeader } from "../components/SectionHeader";
 import { SlotDiagnosticsSummary } from "../components/SlotDiagnosticsSummary";
 import { TrainingStatusBadge } from "../components/TrainingStatusBadge";
 
@@ -55,13 +56,12 @@ export function Dashboard({
 
   return (
     <div style={styles.page}>
-      <div style={styles.headerRow}>
-        <div style={styles.sectionLabel}>Overview</div>
-        <TrainingStatusBadge status={status} />
-      </div>
-
       <div className="dashboard-layout">
         <div className="dashboard-overview">
+          <SectionHeader
+            title="Overview"
+            right={<TrainingStatusBadge status={status} />}
+          />
           <MetricCards status={status} lastMetrics={last} />
           {runId && diagnostic && (
             <SlotDiagnosticsSummary
@@ -92,18 +92,5 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     gap: 16,
-  },
-  headerRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  sectionLabel: {
-    fontSize: 11,
-    color: "#565869",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
   },
 };

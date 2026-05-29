@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import type { MetricsHistory } from "../api/types";
 import { copyJson } from "../utils/clipboard";
 import { MetricChart, type MetricChartLine } from "./MetricChart";
+import { SectionHeader } from "./SectionHeader";
 
 interface MetricChartGridProps {
   metrics: MetricsHistory;
@@ -190,24 +191,33 @@ export function MetricChartGrid({ metrics }: MetricChartGridProps) {
     }
   };
 
+  const copyButton = (
+    <button
+      style={styles.copyAllBtn}
+      onClick={onCopyAll}
+      title="Copy all metrics as JSON"
+    >
+      {copied ? "Copied" : "Copy all metrics"}
+    </button>
+  );
+
+  let firstHeaderRendered = false;
+
   return (
     <div style={styles.root}>
-      <div style={styles.toolbar}>
-        <button
-          style={styles.copyAllBtn}
-          onClick={onCopyAll}
-          title="Copy all metrics as JSON"
-        >
-          {copied ? "Copied" : "Copy all metrics"}
-        </button>
-      </div>
       <div style={styles.grid}>
       {SECTIONS.map((section) => {
         const visibleCharts = section.charts.filter((chart) => chartHasData(chart, metrics));
         if (section.hideIfEmpty && visibleCharts.length === 0) return null;
+        const isFirst = !firstHeaderRendered;
+        firstHeaderRendered = true;
         return (
           <React.Fragment key={section.name}>
-            <div style={styles.sectionHeader}>{section.name}</div>
+            <SectionHeader
+              title={section.name}
+              right={isFirst ? copyButton : undefined}
+              style={styles.sectionHeader}
+            />
             {visibleCharts.map((chart) => (
               <MetricChart
                 key={chart.title}
@@ -228,12 +238,7 @@ const styles: Record<string, React.CSSProperties> = {
   root: {
     display: "flex",
     flexDirection: "column",
-    gap: 10,
     width: "100%",
-  },
-  toolbar: {
-    display: "flex",
-    justifyContent: "flex-end",
   },
   copyAllBtn: {
     fontSize: 11,
@@ -253,14 +258,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sectionHeader: {
     gridColumn: "1 / -1",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#8e8ea0",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    paddingTop: 4,
-    borderBottom: "1px solid #3f3f3f",
-    paddingBottom: 6,
   },
   empty: {
     background: "#2f2f2f",
